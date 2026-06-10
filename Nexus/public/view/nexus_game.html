@@ -1,0 +1,2510 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>NEXUS — A Anomalia</title>
+<style>
+/* ═══════════ RESET ═══════════ */
+*{margin:0;padding:0;box-sizing:border-box;image-rendering:pixelated}
+html,body{width:100%;height:100%;overflow:hidden;background:#050809;font-family:'Courier New',monospace;font-size:14px;color:#7abf84;user-select:none}
+button{font-family:inherit;cursor:pointer;user-select:none}
+input{font-family:inherit}
+
+/* ═══════════ CRT FX ═══════════ */
+#crt{position:fixed;inset:0;z-index:9999;pointer-events:none}
+#crt::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0,rgba(0,0,0,.14) 1px,transparent 1px,transparent 3px)}
+#crt::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 90% 88% at 50% 50%,transparent 52%,rgba(0,0,0,.72) 100%)}
+#flashEl{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity .05s}
+
+/* ═══════════ SCREENS ═══════════ */
+.scr{position:absolute;inset:0;display:none}
+.scr.on{display:flex}
+
+/* ═══════════ TITLE ═══════════ */
+#sTitle{flex-direction:column;align-items:center;justify-content:center;background:#050809;
+  background-image:linear-gradient(rgba(40,100,50,.03)1px,transparent 1px),linear-gradient(90deg,rgba(40,100,50,.03)1px,transparent 1px);background-size:8px 8px}
+#titleArt{margin-bottom:1rem}
+.t-corp{font-size:.48rem;letter-spacing:.5em;color:#3a6a44;text-align:center;margin-bottom:.6rem}
+.t-logo{font-size:clamp(1.4rem,4.5vw,2.8rem);color:#62a870;text-align:center;line-height:1.1;letter-spacing:.05em;text-shadow:2px 0 #2a5c38,-1px 0 rgba(200,0,0,.25)}
+.t-sub{font-size:.46rem;letter-spacing:.4em;color:#3a6a44;margin:.2rem 0 1.1rem;text-align:center}
+.t-div{width:170px;height:2px;margin:0 auto 1.1rem;background:repeating-linear-gradient(90deg,#2a5c38 0,#2a5c38 4px,transparent 4px,transparent 8px)}
+.t-lbl{font-size:.46rem;color:#3a6a44;letter-spacing:.18em;margin-bottom:.28rem;text-align:center}
+.t-inp{background:#09130e;border:1px solid #2a5c38;color:#62a870;font-family:'Courier New',monospace;font-size:.82rem;padding:.42rem .8rem;width:210px;outline:none;text-align:center;letter-spacing:.08em;display:block;margin:0 auto;box-shadow:2px 2px 0 #000,inset 0 0 8px rgba(0,30,0,.5)}
+.t-inp::placeholder{color:#1e4028}
+.grad{display:flex;align-items:center;gap:.22rem;cursor:pointer;font-size:.55rem;color:#3a6a44}
+.grad input{accent-color:#3a9a50;width:11px;height:11px}
+.grad:hover{color:#7abf84}
+.t-warn{font-size:.42rem;color:#3a6a44;letter-spacing:.06em;margin-top:.9rem;text-align:center;max-width:330px;opacity:.5;line-height:1.7}
+
+/* ═══════════ PIXEL BUTTON ═══════════ */
+.pb{background:#09130e;border:1px solid #2a5c38;color:#62a870;box-shadow:2px 2px 0 #000;padding:.48rem 1.5rem;font-size:.6rem;letter-spacing:.1em;display:block;margin:.4rem auto 0;transition:none}
+.pb:hover{background:#0f1e14;border-color:#3a7a48;color:#8ad094}
+.pb:active{transform:translate(1px,1px);box-shadow:none}
+.pb.sm{font-size:.52rem;padding:.32rem .9rem}
+.pb.r{border-color:#6a1515;color:#cc2a2a}.pb.r:hover{background:#1a0606}
+.pb.y{border-color:#5a4010;color:#c89040}.pb.y:hover{background:#1a1006}
+.pb.g{border-color:#2a6a38;color:#5ab870;background:#0c1a10}.pb.g:hover{background:#0f2014}
+
+/* ═══════════ GAME LAYOUT ═══════════ */
+#sGame{flex-direction:column;background:#050809;cursor:pointer}
+
+/* Scene top area */
+#sceneArea{flex:1;position:relative;overflow:hidden;min-height:0}
+#sceneCV{position:absolute;inset:0;width:100%;height:100%}
+#sceneLbl{position:absolute;top:.35rem;left:.5rem;font-size:.46rem;color:rgba(100,180,110,.45);letter-spacing:.14em;pointer-events:none}
+#camTm{position:absolute;top:.35rem;right:.5rem;font-size:.5rem;color:rgba(100,180,110,.38);pointer-events:none}
+/* item card overlay on scene (contextual) */
+#itemCard{position:absolute;bottom:.5rem;left:.5rem;background:rgba(5,15,8,.92);border:1px solid #2a5c38;padding:.5rem .7rem;max-width:200px;display:none;pointer-events:none;font-size:.52rem;line-height:1.6;color:#7abf84;z-index:10}
+#itemCard .ic-title{color:#c89040;font-size:.5rem;letter-spacing:.12em;margin-bottom:.25rem}
+
+/* UI bottom */
+#uiBot{background:#070e0a;border-top:2px solid #1a3a22;flex-shrink:0;display:flex;flex-direction:column}
+#dialRow{display:flex;border-bottom:1px solid #111e14;min-height:0}
+#portWrap{width:clamp(68px,11vw,96px);flex-shrink:0;background:#06100a;border-right:1px solid #111e14;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+#portCV{display:block}
+#spkName{font-size:.42rem;color:#3a6a44;letter-spacing:.1em;text-align:center;padding:.12rem .15rem;border-top:1px solid #111e14;width:100%;background:#09130e}
+#txtArea{flex:1;padding:.45rem .65rem;min-width:0;overflow:hidden}
+#dialTxt{font-size:clamp(.58rem,.85vw+.25rem,.72rem);line-height:1.8;color:#c8dcc8;min-height:2.2rem}
+#dialTxt.glitch{animation:tg .28s steps(2) infinite}
+@keyframes tg{0%{transform:none;color:#c8dcc8}33%{transform:skewX(3deg) translateX(-2px);color:#7abf84;filter:hue-rotate(40deg)}66%{transform:skewX(-2deg) translateX(1px);color:#cc2a2a}100%{transform:none;color:#c8dcc8}}
+#advHint{font-size:.42rem;color:#2a5c38;text-align:right;margin-top:.25rem}
+#advHint.blink{animation:bl .75s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+
+/* choices */
+#choicesDiv{padding:.35rem .55rem;display:none;flex-direction:column;gap:.22rem;background:#06100a;border-bottom:1px solid #111e14}
+.ch{background:#09130e;border:1px solid #1a3a22;color:#7abf84;padding:.32rem .65rem;text-align:left;font-family:'Courier New',monospace;font-size:clamp(.52rem,.65vw+.18rem,.65rem);letter-spacing:.04em;box-shadow:1px 1px 0 #000;line-height:1.4}
+.ch::before{content:'▶ ';color:#2a5c38;font-size:.5rem}
+.ch:hover{background:#0f1e14;border-color:#2a6a38;color:#8ad094}
+.ch:hover::before{color:#5ab870}
+.ch:active{transform:translate(1px,1px);box-shadow:none}
+/* back button always visible */
+#backBtn{display:none;background:#06100a;border:none;border-top:1px solid #0d1e12;color:#2a5c38;font-size:.46rem;letter-spacing:.1em;padding:.22rem;text-align:left;cursor:pointer}
+#backBtn:hover{color:#4a8a54;background:#09130e}
+#backBtn::before{content:'← '}
+
+/* HUD */
+#hudBar{display:flex;align-items:center;gap:.45rem;padding:.2rem .6rem;background:#050809;border-top:1px solid #0d1e12;flex-wrap:wrap}
+.hc{font-size:.44rem;letter-spacing:.09em;color:#3a6a44;white-space:nowrap}
+.hc b{color:#7abf84}
+.hb{display:inline-flex;width:46px;height:4px;background:#09130e;border:1px solid #111e14;vertical-align:middle;margin-left:2px;overflow:hidden}
+.hbf{height:100%;transition:width .3s}
+.hsep{width:1px;height:12px;background:#111e14}
+.hbtn{font-family:'Courier New',monospace;font-size:.42rem;letter-spacing:.07em;background:#09130e;border:1px solid #1a3a22;color:#3a6a44;padding:.15rem .45rem;cursor:pointer;box-shadow:1px 1px 0 #000}
+.hbtn:hover{border-color:#2a5c38;color:#7abf84}
+#hudBar .sp{flex:1}
+
+/* ═══════════ NOTIFICATION ═══════════ */
+#notifBox{position:fixed;top:45px;right:8px;z-index:5000;display:flex;flex-direction:column;gap:4px;pointer-events:none;max-width:240px}
+.notif{background:#09130e;border:1px solid #2a5c38;padding:.32rem .6rem;font-size:.5rem;color:#7abf84;letter-spacing:.07em;box-shadow:2px 2px 0 #000;line-height:1.5;animation:nin .2s ease-out}
+@keyframes nin{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+.notif.item{border-color:#c89040;color:#c89040}
+.notif.lore{border-color:#4a8a54}
+
+/* ═══════════ INVENTORY ═══════════ */
+#invOv{position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center}
+#invOv.on{display:flex}
+#invBox{background:#09130e;border:1px solid #2a5c38;box-shadow:3px 3px 0 #000;width:min(680px,96vw);max-height:88vh;display:flex;flex-direction:column}
+.inv-hd{background:#0d1a12;border-bottom:1px solid #1a3a22;padding:.35rem .7rem;display:flex;align-items:center;justify-content:space-between}
+.inv-ht{font-size:.7rem;color:#62a870;letter-spacing:.16em}
+.inv-tabs{display:flex;border-bottom:1px solid #111e14}
+.itab{font-size:.48rem;padding:.28rem .65rem;cursor:pointer;color:#3a6a44;border-right:1px solid #111e14;letter-spacing:.07em}
+.itab.on{background:#0f1e14;color:#7abf84}
+.itab:hover{color:#7abf84}
+.inv-body{display:flex;flex:1;overflow:hidden;min-height:260px}
+.inv-list{width:190px;border-right:1px solid #111e14;overflow-y:auto;flex-shrink:0;scrollbar-width:thin;scrollbar-color:#1a3a22 #09130e}
+.ii{padding:.35rem .65rem;font-size:.56rem;cursor:pointer;border-bottom:1px solid #0d1a12;color:#3a6a44;letter-spacing:.04em;line-height:1.3}
+.ii:hover,.ii.sel{background:#0f1e14;color:#7abf84}
+.ii .cat{font-size:.4rem;color:#2a5c38;display:block;margin-top:.08rem}
+.inv-det{flex:1;padding:.7rem .85rem;overflow-y:auto;display:flex;flex-direction:column;gap:.4rem}
+.inv-dt{font-size:.62rem;color:#62a870;letter-spacing:.1em}
+.inv-db{font-size:.58rem;line-height:1.75;white-space:pre-wrap;color:#c8dcc8}
+.inv-use{display:none}
+.inv-empty{font-size:.56rem;color:#2a5c38;padding:.9rem}
+
+/* ═══════════ MINIGAME OVERLAY ═══════════ */
+#mgOv{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;flex-direction:column}
+#mgOv.on{display:flex}
+#mgBox{background:#09130e;border:1px solid #2a5c38;box-shadow:3px 3px 0 #000;max-width:min(680px,96vw);width:100%;display:flex;flex-direction:column;max-height:94vh;overflow-y:auto}
+.mg-hd{background:#0d1a12;border-bottom:1px solid #1a3a22;padding:.35rem .7rem;display:flex;align-items:center;justify-content:space-between}
+.mg-ht{font-size:.68rem;color:#62a870;letter-spacing:.16em}
+.mg-esc{font-size:.46rem;color:#3a6a44;cursor:pointer;padding:.18rem .45rem;border:1px solid #1a3a22}
+.mg-esc:hover{color:#7abf84}
+.mg-bd{padding:.7rem;display:flex;flex-direction:column;align-items:center;gap:.55rem}
+.mg-inst{font-size:.56rem;color:#3a6a44;text-align:center;max-width:480px;line-height:1.7}
+.mg-st{font-size:.58rem;color:#3a6a44;min-height:.9rem;text-align:center}
+.mg-st b{color:#7abf84}
+.mg-res{display:none;flex-direction:column;align-items:center;gap:.45rem;text-align:center}
+.mg-res.on{display:flex}
+.mg-rl{font-size:.95rem;letter-spacing:.18em}
+.mg-rl.win{color:#62a870}
+.mg-rl.lose{color:#cc2a2a}
+.mg-rm{font-size:.56rem;color:#3a6a44;max-width:340px;line-height:1.7}
+
+/* wire */
+.wa{background:#06100a;border:1px solid #111e14;padding:.6rem;width:min(480px,90vw)}
+.wr{display:flex;align-items:center;gap:.45rem;margin-bottom:.28rem}
+.wl{font-size:.52rem;width:88px;color:#3a6a44;flex-shrink:0;line-height:1.3}
+.wt{flex:1;height:9px;position:relative;cursor:pointer;border:1px solid}
+.wt.sel{filter:brightness(1.9);outline:1px solid currentColor}
+.wd{width:7px;height:7px;position:absolute;top:1px;animation:wd 1s steps(16) infinite}
+@keyframes wd{0%{left:0}100%{left:calc(100% - 7px)}}
+.wn{font-size:.48rem;color:#3a6a44;width:50px;text-align:right}
+.trow{display:flex;gap:.35rem;justify-content:center;margin-top:.3rem}
+.ts{width:36px;height:36px;background:#06100a;border:1px solid #1a3a22;display:flex;align-items:center;justify-content:center;font-size:.5rem;cursor:pointer;color:#3a6a44;box-shadow:1px 1px 0 #000}
+.ts:hover{border-color:#3a7a48;color:#7abf84}
+.ts.ok{border-color:#3a8a48;color:#62a870;background:rgba(30,100,40,.12)}
+.ts.bad{border-color:#8a1515;color:#cc2a2a;background:rgba(150,20,20,.1)}
+.lw-w{font-size:.56rem;color:#c89040;text-align:center;padding:.3rem;border:1px solid #5a4010;background:rgba(60,40,10,.18);display:none}
+
+/* pc term */
+.pcterm{background:#000;border:1px solid #0a2a0a;padding:.6rem;font-size:.6rem;width:min(480px,90vw);height:200px;overflow-y:auto;color:#00cc00;line-height:1.7;scrollbar-width:thin;scrollbar-color:#0a3a0a #000}
+.pc-ir{display:flex;gap:.3rem;align-items:center;width:min(480px,90vw)}
+.pc-pr{color:#00cc00;font-size:.6rem;flex-shrink:0}
+.pc-in{flex:1;background:transparent;border:none;border-bottom:1px solid #00cc00;color:#00cc00;font-family:'Courier New',monospace;font-size:.6rem;outline:none;padding:.18rem 0;letter-spacing:.06em}
+
+/* elevator */
+.edsp{font-family:'Courier New',monospace;font-size:1.4rem;color:#62a870;background:#050809;border:1px solid #2a5c38;box-shadow:1px 1px 0 #000;padding:.28rem .75rem;text-align:center;letter-spacing:.3em;width:min(210px,80vw)}
+.epad{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;width:min(210px,80vw)}
+.ek{padding:.55rem;font-family:'Courier New',monospace;font-size:1.1rem;background:#09130e;border:1px solid #1a3a22;box-shadow:1px 1px 0 #000;cursor:pointer;color:#7abf84;text-align:center}
+.ek:hover{border-color:#3a7a48;color:#8ad094}
+.ek:active{transform:translate(1px,1px);box-shadow:none}
+
+/* boss */
+#bossCV{border:1px solid #1a3a22;box-shadow:2px 2px 0 #000;max-width:min(480px,90vw)}
+.bbs{display:flex;gap:.7rem;width:min(480px,90vw)}
+.bbw{flex:1}
+.bbl{font-size:.46rem;letter-spacing:.09em;margin-bottom:.12rem}
+.bbt{height:9px;background:#06100a;border:1px solid #111e14}
+.bbf{height:100%;transition:width .22s steps(8)}
+.bbv{font-size:.42rem;color:#3a6a44;margin-top:.1rem;text-align:right}
+.bacts{display:flex;gap:.3rem;flex-wrap:wrap;justify-content:center;max-width:480px}
+.blog{background:#050809;border:1px solid #111e14;font-size:.54rem;padding:.35rem .55rem;width:min(480px,90vw);height:66px;overflow-y:auto;line-height:1.7;scrollbar-width:thin;scrollbar-color:#1a3a22 #050809}
+.blp{color:#62a870}.ble{color:#cc2a2a}.bln{color:#3a6a44}
+
+/* sus */
+.sus-npc{display:flex;align-items:flex-start;gap:.7rem;width:min(460px,90vw)}
+.sus-pb{width:88px;height:108px;background:#06100a;border:1px solid #5a4010;flex-shrink:0;overflow:hidden}
+.sus-sp{flex:1;background:#09130e;border:1px solid #111e14;padding:.55rem .75rem;font-size:.6rem;line-height:1.8}
+.sus-mt{display:flex;align-items:center;gap:.35rem;width:min(460px,90vw)}
+.sus-ml{font-size:.46rem;color:#cc2a2a;letter-spacing:.09em;white-space:nowrap}
+.sus-mtr{flex:1;height:7px;background:#1a0808;border:1px solid #380e0e}
+.sus-mf{height:100%;background:#cc2a2a;transition:width .3s steps(8)}
+.sus-mv{font-size:.46rem;color:#cc2a2a;white-space:nowrap}
+.sus-opts{display:flex;flex-direction:column;gap:.24rem;width:min(460px,90vw)}
+
+/* ═══════════ DEATH ═══════════ */
+#sDeath{flex-direction:column;align-items:center;justify-content:center;background:#080206;text-align:center;padding:2rem;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0,rgba(0,0,0,.18) 1px,transparent 1px,transparent 4px)}
+.d-sk{font-size:3.5rem;animation:pulse 1.4s ease-in-out infinite;margin-bottom:.4rem}
+@keyframes pulse{50%{opacity:.4}}
+.d-t{font-size:clamp(1.1rem,3.8vw,1.9rem);color:#cc2a2a;letter-spacing:.09em;margin-bottom:.35rem}
+.d-dv{width:130px;height:2px;margin:.35rem auto .7rem;background:repeating-linear-gradient(90deg,#cc2a2a 0,#cc2a2a 4px,transparent 4px,transparent 8px)}
+.d-b{max-width:460px;font-size:.64rem;line-height:1.92;opacity:.78;margin-bottom:.9rem;white-space:pre-line}
+.d-c{font-size:.48rem;letter-spacing:.16em;color:#6a1515;margin-bottom:1.1rem}
+
+/* ═══════════ FINAL ═══════════ */
+#sFinal{flex-direction:column;align-items:center;justify-content:center;background:#050809;text-align:center;padding:2rem;background-image:linear-gradient(rgba(40,100,50,.02)1px,transparent 1px),linear-gradient(90deg,rgba(40,100,50,.02)1px,transparent 1px);background-size:8px 8px}
+.f-eye{font-size:.44rem;color:#3a6a44;letter-spacing:.32em;margin-bottom:.32rem}
+.f-num{font-size:5rem;opacity:.1;line-height:1}
+.f-tit{font-size:clamp(.95rem,3.5vw,1.85rem);letter-spacing:.09em;margin-bottom:.45rem}
+.f-dv{height:2px;width:130px;margin:.35rem auto .8rem}
+.f-b{max-width:520px;font-size:.65rem;line-height:1.95;opacity:.8;margin-bottom:1rem;white-space:pre-line}
+.f-tg{font-size:.48rem;color:#3a6a44;letter-spacing:.13em;margin-bottom:1.1rem}
+
+/* ═══════════ MURAL ═══════════ */
+#sMural{flex-direction:column;background:#050809;padding:1.1rem;overflow-y:auto}
+.mural-t{font-size:.95rem;color:#62a870;letter-spacing:.18em;text-align:center;margin-bottom:.9rem}
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:.55rem}
+.mc{background:#09130e;border:1px solid #111e14;padding:.55rem .75rem;position:relative;box-shadow:2px 2px 0 #000}
+.mc.open{border-color:#2a5c38}
+.mc.death{}.mc.death.open{border-color:#6a1515}
+.mc-n{font-size:1.8rem;opacity:.12;line-height:1}
+.mc-nm{font-size:.56rem;letter-spacing:.09em;margin-bottom:.2rem}
+.mc-d{font-size:.5rem;color:#3a6a44;line-height:1.5}
+.mc-lk{position:absolute;top:.38rem;right:.5rem;font-size:.62rem;color:#2a5c38}
+.mc.open .mc-lk{color:#62a870}
+.mc.death.open .mc-lk{color:#cc2a2a}
+
+/* find plug grid */
+.pgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;width:min(340px,88vw)}
+.pc{aspect-ratio:1;background:#06100a;border:1px solid #111e14;display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;box-shadow:1px 1px 0 #000}
+.pc:hover{border-color:#2a5c38}
+.pc.found{border-color:#3a8a48;background:rgba(30,100,40,.15)}
+.pc.no{border-color:#6a1515;background:rgba(100,15,15,.1)}
+
+/* save progress */
+.pbar{width:min(340px,88vw)}
+.pbtr{height:11px;background:#06100a;border:1px solid #111e14}
+.pbf{height:100%;background:#3a8a48;transition:width .12s}
+.pblb{font-size:.5rem;color:#3a6a44;text-align:center;margin-top:.22rem}
+
+/* save options */
+.svopts{display:flex;flex-direction:column;gap:.3rem;width:min(440px,88vw)}
+.svopt{background:#09130e;border:1px solid #1a3a22;padding:.45rem .75rem;cursor:pointer;display:flex;align-items:center;gap:.55rem;box-shadow:1px 1px 0 #000}
+.svopt:hover{border-color:#2a5c38;background:#0d1a12}
+.svopt.locked{opacity:.3;pointer-events:none}
+.svopt.sel{border-color:#3a8a48;background:rgba(30,100,40,.1)}
+.svopt-ic{font-size:1rem;flex-shrink:0;width:18px;text-align:center}
+.svopt-nm{font-size:.58rem;letter-spacing:.07em}
+.svopt-dc{font-size:.48rem;color:#3a6a44;margin-top:.08rem}
+</style>
+</head>
+<body>
+<div id="crt"></div>
+<div id="flashEl"></div>
+<div id="notifBox"></div>
+
+<!-- TITLE -->
+<div class="scr on" id="sTitle">
+  <canvas id="titleArt" width="260" height="84"></canvas>
+  <div class="t-corp">NEXUS ENTERPRISE // SISTEMA INTERNO — ANO 50 PÓS-APAGÃO</div>
+  <div class="t-logo">A ANOMALIA DA<br>NEXUS ENTERPRISE</div>
+  <div class="t-sub">VISUAL NOVEL INTERATIVA</div>
+  <div class="t-div"></div>
+  <div class="t-lbl">NOME DO AGENTE</div>
+  <input class="t-inp" id="tName" type="text" placeholder="SEU NOME" maxlength="16" autocomplete="off" spellcheck="false">
+  <div class="t-lbl" style="margin-top:.45rem">GÊNERO</div>
+  <div style="display:flex;gap:.7rem;justify-content:center;margin:.3rem 0">
+    <label class="grad"><input type="radio" name="gen" value="f" checked> Feminino</label>
+    <label class="grad"><input type="radio" name="gen" value="m"> Masculino</label>
+    <label class="grad"><input type="radio" name="gen" value="n"> Neutro</label>
+  </div>
+  <button class="pb" onclick="G.startGame()" style="margin-top:.7rem">[ INICIAR INVESTIGAÇÃO ]</button>
+  <button class="pb sm" onclick="G.tryResume()" style="margin-top:.35rem">[ RETOMAR SESSÃO ]</button>
+  <button class="pb sm" onclick="G.openMural(true)" style="margin-top:.2rem">[ MURAL DE FINAIS ]</button>
+  <div class="t-warn">⚠ HORROR PSICOLÓGICO — INSPIRADO EM I HAVE NO MOUTH AND I MUST SCREAM<br>O GRANDE APAGÃO OCORREU HÁ 50 ANOS</div>
+</div>
+
+<!-- GAME -->
+<div class="scr" id="sGame">
+  <div id="sceneArea">
+    <canvas id="sceneCV"></canvas>
+    <div id="sceneLbl"></div>
+    <div id="camTm"></div>
+    <div id="itemCard"><div class="ic-title" id="icTitle"></div><div id="icBody"></div></div>
+  </div>
+  <div id="uiBot">
+    <div id="dialRow">
+      <div id="portWrap">
+        <canvas id="portCV" width="88" height="100"></canvas>
+        <div id="spkName">—</div>
+      </div>
+      <div id="txtArea">
+        <div id="dialTxt"></div>
+        <div id="advHint">▼ clique em qualquer lugar</div>
+      </div>
+    </div>
+    <div id="choicesDiv"></div>
+    <button id="backBtn" onclick="G.goBack()"></button>
+    <div id="hudBar">
+      <div class="hc">SYNC <b id="hSV">75%</b><span class="hb"><span class="hbf" id="hSB" style="width:75%;background:#3a8a48"></span></span></div>
+      <div class="hsep"></div>
+      <div class="hc" style="color:#8a2020">SUSPEITA <b id="hSuV" style="color:#cc2a2a">0%</b><span class="hb"><span class="hbf" id="hSuB" style="width:0%;background:#cc2a2a"></span></span></div>
+      <div class="hsep"></div>
+      <div class="hc">FRAG <b id="hFrag" style="color:#c89040">0</b></div>
+      <div class="sp"></div>
+      <button class="hbtn" onclick="G.openInv('items')">ITENS</button>
+      <button class="hbtn" onclick="G.openInv('lore')">LORE</button>
+      <button class="hbtn" onclick="G.openMural(false)">FINAIS</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEATH -->
+<div class="scr" id="sDeath">
+  <div class="d-sk">💀</div>
+  <div class="d-t" id="dT">VOCÊ MORREU</div>
+  <div class="d-dv"></div>
+  <div class="d-b" id="dB"></div>
+  <div class="d-c" id="dC"></div>
+  <button class="pb r" onclick="G.restart()">[ REINICIAR ]</button>
+  <button class="pb sm" style="margin-top:.35rem" onclick="G.openMural(true)">[ VER MURAL ]</button>
+</div>
+
+<!-- FINAL -->
+<div class="scr" id="sFinal">
+  <div class="f-eye">NEXUS ENTERPRISE // REGISTRO DE OCORRÊNCIA</div>
+  <div class="f-num" id="fN"></div>
+  <div class="f-tit" id="fT"></div>
+  <div class="f-dv" id="fD"></div>
+  <div class="f-b" id="fB"></div>
+  <div class="f-tg" id="fG"></div>
+  <button class="pb sm" onclick="G.openMural(true)">[ MURAL DE FINAIS ]</button>
+  <button class="pb sm" style="margin-top:.35rem" onclick="G.restart()">[ REINICIAR ]</button>
+</div>
+
+<!-- MURAL -->
+<div class="scr" id="sMural">
+  <div class="mural-t">◈ MURAL DE FINAIS</div>
+  <div class="mg" id="muralGrid"></div>
+  <div style="text-align:center;margin-top:.9rem"><button class="pb sm" onclick="G.closeMural()">[ VOLTAR ]</button></div>
+</div>
+
+<!-- INVENTORY -->
+<div id="invOv">
+  <div id="invBox">
+    <div class="inv-hd"><div class="inv-ht">INVENTÁRIO</div><button class="pb sm" onclick="G.closeInv()">[ FECHAR ]</button></div>
+    <div class="inv-tabs">
+      <div class="itab on" id="it-items" onclick="G.switchTab('items')">ITENS</div>
+      <div class="itab" id="it-lore" onclick="G.switchTab('lore')">LORE / DOCS</div>
+    </div>
+    <div class="inv-body">
+      <div class="inv-list" id="invList"></div>
+      <div class="inv-det"><div class="inv-dt" id="invDT">Selecione um item</div><div class="inv-db" id="invDB"></div><div class="inv-use" id="invUse"><button class="pb sm y" onclick="G.useItem()">[ USAR AQUI ]</button></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MINIGAME -->
+<div id="mgOv">
+  <div id="mgBox">
+    <div class="mg-hd"><div class="mg-ht" id="mgHT">MINIGAME</div><div class="mg-esc" id="mgEsc" onclick="G.closeMG()">[ ESC — SAIR ]</div></div>
+    <div class="mg-bd" id="mgBD"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+// SECTION 1: CORE ENGINE
+// ════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const G = {};
+
+// ── Save/Load (robusto) ──
+const SAVE_KEY = 'nexus6_state';
+const MURAL_KEY = 'nexus6_mural';
+
+G.saveState = () => {
+  try {
+    const data = JSON.stringify(G.S);
+    localStorage.setItem(SAVE_KEY, data);
+    sessionStorage.setItem(SAVE_KEY, data); // backup
+  } catch(e) { console.warn('Save failed:', e); }
+};
+
+G.loadState = () => {
+  try {
+    const d = localStorage.getItem(SAVE_KEY) || sessionStorage.getItem(SAVE_KEY);
+    if (d) { G.S = JSON.parse(d); return true; }
+  } catch(e) { console.warn('Load failed:', e); }
+  return false;
+};
+
+G.saveMural = (key, type='ending') => {
+  try {
+    const m = JSON.parse(localStorage.getItem(MURAL_KEY) || '{"endings":[],"deaths":[]}');
+    if (type === 'ending') { if (!m.endings.includes(key)) m.endings.push(key); }
+    else { if (!m.deaths.includes(key)) m.deaths.push(key); }
+    localStorage.setItem(MURAL_KEY, JSON.stringify(m));
+    sessionStorage.setItem(MURAL_KEY, JSON.stringify(m));
+  } catch(e) {}
+};
+
+G.getMural = () => {
+  try {
+    return JSON.parse(localStorage.getItem(MURAL_KEY) || sessionStorage.getItem(MURAL_KEY) || '{"endings":[],"deaths":[]}');
+  } catch(e) { return {endings:[], deaths:[]}; }
+};
+
+// ── State ──
+G.initState = (name, gen) => {
+  G.S = {
+    name, gen, sync: 75, sus: 0, frags: 0,
+    scene: null, lineIdx: 0, typing: false,
+    inv: [], lore: [], flags: {}, path: '',
+    bossHP: {p:100, r:150},
+    backTarget: null,
+  };
+};
+
+// ── Screen management ──
+G.showScr = id => {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  $(id).classList.add('on');
+};
+
+// ── Flash effects ──
+G.flash = (color, dur=450) => {
+  const el = $('flashEl');
+  el.style.background = color;
+  el.style.opacity = '1';
+  setTimeout(() => { el.style.opacity = '0'; }, dur);
+};
+G.flashGood = () => G.flash('rgba(60,180,80,.14)', 400);
+G.flashBad = () => {
+  G.flash('rgba(200,30,30,.2)', 500);
+  const el = $('flashEl');
+  let x = 0;
+  const shake = setInterval(() => {
+    el.style.transform = `translateX(${['-3px','4px','-2px','0'][x%4]})`;
+    if(++x >= 4) { clearInterval(shake); el.style.transform = ''; }
+  }, 60);
+};
+G.glitch = (dur=400) => G.flash('rgba(200,30,30,.12)', dur);
+
+// ── HUD ──
+G.updateHUD = () => {
+  const s = Math.max(0, Math.min(100, G.S.sync));
+  $('hSB').style.width = s + '%';
+  $('hSB').style.background = s>50?'#3a8a48':s>25?'#8a7020':'#8a2020';
+  $('hSV').textContent = s + '%';
+  const su = Math.max(0, Math.min(100, G.S.sus));
+  $('hSuB').style.width = su + '%';
+  $('hSuV').textContent = su + '%';
+  $('hFrag').textContent = G.S.frags;
+};
+G.setSync = v => { G.S.sync = Math.max(0, Math.min(100, v)); G.updateHUD(); };
+G.setSus = v => { G.S.sus = Math.max(0, Math.min(100, v)); G.updateHUD(); };
+
+// ── Notifications ──
+G.notify = (msg, type='lore') => {
+  const box = $('notifBox');
+  const el = document.createElement('div');
+  el.className = 'notif ' + type;
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(), 350); }, 3200);
+};
+
+// ── Items & Lore ──
+G.addItem = (id, name, cat, desc, usableIn=[]) => {
+  if (G.S.inv.find(i => i.id===id)) return;
+  G.S.inv.push({id, name, cat, desc, usableIn});
+  G.notify('+ ITEM: ' + name, 'item');
+  G.saveState();
+};
+G.addLore = (id, title, body) => {
+  if (G.S.lore.find(l => l.id===id)) return;
+  G.S.lore.push({id, title, body});
+  G.S.frags++;
+  G.updateHUD();
+  G.notify('◈ LORE: ' + title, 'lore');
+  G.flashGood();
+  G.saveState();
+};
+G.hasItem = id => !!G.S.inv.find(i => i.id===id);
+G.hasFlag = f => !!G.S.flags[f];
+G.setFlag = f => { G.S.flags[f] = true; G.saveState(); };
+
+// ── Contextual item card on scene ──
+G.showItemCard = (title, body) => {
+  $('icTitle').textContent = title;
+  $('icBody').textContent = body;
+  $('itemCard').style.display = 'block';
+};
+G.hideItemCard = () => { $('itemCard').style.display = 'none'; };
+
+// ── Clock ──
+G.startClock = () => {
+  clearInterval(G._clk);
+  G._clk = setInterval(() => {
+    const n = new Date();
+    $('camTm').textContent = n.getHours().toString().padStart(2,'0') + ':' + n.getMinutes().toString().padStart(2,'0');
+  }, 1000);
+};
+
+// ── Game entry points ──
+G.startGame = () => {
+  const n = $('tName').value.trim();
+  if (!n) { $('tName').style.borderColor='#cc2a2a'; $('tName').focus(); return; }
+  const gen = document.querySelector('input[name="gen"]:checked')?.value || 'f';
+  G.initState(n, gen);
+  G.showScr('sGame');
+  G.updateHUD();
+  G.startClock();
+  G.goScene('room_start');
+};
+
+G.tryResume = () => {
+  if (G.loadState() && G.S.scene) {
+    G.showScr('sGame');
+    G.updateHUD();
+    G.startClock();
+    G.goScene(G.S.scene);
+  } else {
+    alert('Nenhuma sessão encontrada.');
+  }
+};
+
+G.restart = () => {
+  try { localStorage.removeItem(SAVE_KEY); sessionStorage.removeItem(SAVE_KEY); } catch(e) {}
+  location.reload();
+};
+
+// ── Pronoun helpers ──
+G.pr = () => ({ f:{o:'a',um:'uma',ele:'ela'}, m:{o:'o',um:'um',ele:'ele'}, n:{o:'o(a)',um:'um(a)',ele:'ele/ela'} }[G.S.gen]);
+
+// ════════════════════════════════════════════════════════════════
+// SECTION 2: PORTRAIT RENDERER
+// ════════════════════════════════════════════════════════════════
+const PORT = {
+  draw(id) {
+    const cv = $('portCV');
+    if (!cv) return;
+    cv.width = cv.parentElement.offsetWidth || 88;
+    cv.height = 100;
+    const ctx = cv.getContext('2d');
+    (PORT[id] || PORT.system)(ctx, cv.width, cv.height);
+  },
+  _bg(ctx, W, H, col='#050e08') { ctx.fillStyle=col; ctx.fillRect(0,0,W,H); },
+  player_f(ctx, W, H) {
+    PORT._bg(ctx,W,H); const cx=W/2;
+    ctx.fillStyle='#1a3a22'; ctx.fillRect(cx-24,50,48,50);
+    ctx.fillStyle='#1e3e26'; ctx.fillRect(cx-20,18,40,36);
+    ctx.fillStyle='#0a0e0a'; ctx.fillRect(cx-22,13,44,12); ctx.fillRect(cx-24,18,6,18); ctx.fillRect(cx+18,18,6,16);
+    ctx.fillStyle='#4a9a58'; ctx.fillRect(cx-14,28,10,6); ctx.fillRect(cx+4,28,10,6);
+    ctx.fillStyle='#000'; ctx.fillRect(cx-12,30,6,3); ctx.fillRect(cx+6,30,6,3);
+    ctx.fillStyle='#152a1a'; ctx.fillRect(cx-10,44,20,3);
+    ctx.fillStyle='#1a4a28'; ctx.fillRect(cx-14,60,28,14);
+    ctx.fillStyle='#4a9a58'; ctx.font='5px monospace'; ctx.textAlign='center'; ctx.fillText('NEXUS',cx,70);
+  },
+  player_m(ctx, W, H) {
+    PORT._bg(ctx,W,H); const cx=W/2;
+    ctx.fillStyle='#1a3a22'; ctx.fillRect(cx-26,52,52,48);
+    ctx.fillStyle='#1e3e26'; ctx.fillRect(cx-21,16,42,38);
+    ctx.fillStyle='#080c08'; ctx.fillRect(cx-23,12,46,9); ctx.fillRect(cx-25,16,5,14); ctx.fillRect(cx+20,16,5,12);
+    ctx.fillStyle='#4a9a58'; ctx.fillRect(cx-15,28,11,6); ctx.fillRect(cx+4,28,11,6);
+    ctx.fillStyle='#000'; ctx.fillRect(cx-13,30,7,3); ctx.fillRect(cx+6,30,7,3);
+    ctx.fillStyle='#152a1a'; ctx.fillRect(cx-11,46,22,3);
+    ctx.fillStyle='#1a4a28'; ctx.fillRect(cx-15,62,30,14);
+    ctx.fillStyle='#4a9a58'; ctx.font='5px monospace'; ctx.textAlign='center'; ctx.fillText('NEXUS',cx,72);
+  },
+  ruel(ctx, W, H) {
+    PORT._bg(ctx,W,H,'#030608');
+    for(let i=0;i<10;i++) {
+      ctx.fillStyle=`rgba(${40+i*8},${120+i*4},${50+i*8},0.12)`;
+      ctx.fillRect(Math.random()*W, Math.random()*H, Math.random()*25+8, 2);
+    }
+    ctx.fillStyle='#122018'; ctx.fillRect(18,22,W-36,34);
+    ctx.fillStyle='#0c1610'; ctx.fillRect(22,14,W-44,18);
+    ctx.fillStyle='#3a8a48'; ctx.fillRect(26,18,9,6); ctx.fillRect(W-35,18,9,6);
+    ctx.fillStyle='#7add90'; ctx.fillRect(28,20,5,2); ctx.fillRect(W-33,20,5,2);
+    ctx.fillStyle='rgba(80,200,100,.5)'; ctx.fillRect(0,25,W,1); ctx.fillRect(0,38,W,1);
+    ctx.fillStyle='rgba(255,0,0,.25)'; ctx.fillRect(0,32,W,1);
+    ctx.fillStyle='#62a870'; ctx.font='5px monospace'; ctx.textAlign='center'; ctx.fillText('RUEL_?',W/2,85);
+  },
+  santos(ctx, W, H) {
+    PORT._bg(ctx,W,H,'#080c08');
+    ctx.fillStyle='#101a10'; ctx.fillRect(8,50,W-16,50);
+    ctx.fillStyle='#1a2a1a'; ctx.fillRect(W/2-6,50,12,30);
+    ctx.fillStyle='#1e361e'; ctx.fillRect(18,15,W-36,38);
+    ctx.fillStyle='#3a5a3a'; ctx.fillRect(16,11,W-32,8); ctx.fillRect(14,15,5,14); ctx.fillRect(W-19,15,5,12);
+    ctx.fillStyle='#2a6a38'; ctx.fillRect(22,28,10,7); ctx.fillRect(W-32,28,10,7);
+    ctx.fillStyle='#050805'; ctx.fillRect(25,31,6,4); ctx.fillRect(W-31,31,6,4);
+    ctx.fillStyle='#101a10'; ctx.fillRect(W/2-11,46,22,3);
+    ctx.fillStyle='#3a2a08'; ctx.fillRect(W-30,58,24,13);
+    ctx.fillStyle='#c89050'; ctx.font='4px monospace'; ctx.textAlign='center'; ctx.fillText('DIR.',W-18,66); ctx.fillText('SANTOS',W-18,72);
+  },
+  system(ctx, W, H) {
+    PORT._bg(ctx,W,H,'#040a06');
+    ctx.fillStyle='#08120a'; ctx.fillRect(8,12,W-16,68);
+    ctx.strokeStyle='#1a4a22'; ctx.lineWidth=1; ctx.strokeRect(8,12,W-16,68);
+    ctx.fillStyle='#020806'; ctx.fillRect(12,16,W-24,60);
+    ctx.fillStyle='#2a6a38'; ctx.fillRect(16,20,5,9);
+    for(let i=0;i<5;i++){ctx.fillStyle=`rgba(40,140,60,${.25+i*.08})`; ctx.fillRect(24,20+i*10,Math.random()*28+12,2);}
+    ctx.fillStyle='#2a6a38'; ctx.font='5px monospace'; ctx.textAlign='center'; ctx.fillText('SISTEMA',W/2,86);
+  },
+  narrator(ctx, W, H) {
+    PORT._bg(ctx,W,H,'#040806');
+    ctx.fillStyle='#0a1810'; ctx.beginPath(); ctx.ellipse(W/2,H/2,32,20,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#142a18'; ctx.beginPath(); ctx.arc(W/2,H/2,22,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#1e4428'; ctx.beginPath(); ctx.arc(W/2,H/2,12,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#3a8a48'; ctx.beginPath(); ctx.arc(W/2,H/2,6,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#000'; ctx.beginPath(); ctx.arc(W/2,H/2,2,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#2a6a38'; ctx.font='5px monospace'; ctx.textAlign='center'; ctx.fillText('NARRADOR',W/2,90);
+  },
+};
+
+// ════════════════════════════════════════════════════════════════
+// SECTION 3: SCENE ARTIST
+// ════════════════════════════════════════════════════════════════
+const ART = {
+  draw(id) {
+    const cv = $('sceneCV');
+    if (!cv) return;
+    cv.width = cv.parentElement.offsetWidth || 800;
+    cv.height = cv.parentElement.offsetHeight || 300;
+    (ART[id] || ART.corridor)(cv.getContext('2d'), cv.width, cv.height);
+  },
+  _grid(ctx, W, H) {
+    ctx.strokeStyle='rgba(40,100,50,.03)'; ctx.lineWidth=1;
+    for(let x=0;x<W;x+=8){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=8){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  },
+  room_start(ctx, W, H) {
+    ctx.fillStyle='#06080a'; ctx.fillRect(0,0,W,H);
+    // floor
+    ctx.fillStyle='#080c0a'; ctx.fillRect(0,H*.62,W,H*.38);
+    // ceiling
+    ctx.fillStyle='#050708'; ctx.fillRect(0,0,W,H*.14);
+    // walls — concrete texture
+    for(let x=0;x<W;x+=6){
+      const v=Math.sin(x*.04)*2;
+      ctx.fillStyle=`rgba(12,${18+v},14,0.9)`;
+      ctx.fillRect(x,H*.14,6,H*.48);
+    }
+    // desk with computer
+    ctx.fillStyle='#0e1a12'; ctx.fillRect(W*.1,H*.52,W*.35,H*.12);
+    ctx.fillStyle='#060e08'; ctx.fillRect(W*.14,H*.3,W*.22,H*.22);
+    ctx.strokeStyle='rgba(30,80,40,.5)'; ctx.lineWidth=1; ctx.strokeRect(W*.14,H*.3,W*.22,H*.22);
+    ctx.fillStyle='rgba(0,40,10,.3)'; ctx.fillRect(W*.15,H*.31,W*.2,H*.2);
+    // blinking screen
+    if(Math.floor(Date.now()/600)%2) { ctx.fillStyle='rgba(40,130,60,.4)'; ctx.fillRect(W*.16,H*.32,4,8); }
+    // door at far right — reinforced metal
+    const dw=W*.14, dx=W*.82, dy=H*.18, dh=H*.62;
+    ctx.fillStyle='#080e0c'; ctx.fillRect(dx,dy,dw,dh);
+    ctx.strokeStyle='rgba(30,70,40,.6)'; ctx.lineWidth=2; ctx.strokeRect(dx,dy,dw,dh);
+    [[dx+5,dy+5],[dx+dw-5,dy+5],[dx+5,dy+dh-5],[dx+dw-5,dy+dh-5]].forEach(([bx,by])=>{
+      ctx.fillStyle='rgba(50,30,10,.8)'; ctx.fillRect(bx-3,by-3,6,6);
+    });
+    // monitor on door
+    ctx.fillStyle='#020606'; ctx.fillRect(dx+dw*.12,dy+dh*.28,dw*.76,dh*.22);
+    ctx.strokeStyle='rgba(20,60,30,.8)'; ctx.lineWidth=1; ctx.strokeRect(dx+dw*.12,dy+dh*.28,dw*.76,dh*.22);
+    ctx.fillStyle='rgba(0,50,20,.5)'; ctx.fillRect(dx+dw*.14,dy+dh*.3,dw*.72,dh*.18);
+    // fluorescent ceiling light
+    ctx.fillStyle='rgba(100,180,110,.55)'; ctx.fillRect(W*.25,0,W*.5,3);
+    ctx.fillStyle='rgba(80,160,90,.06)'; ctx.fillRect(W*.1,0,W*.8,H*.45);
+    // floor tiles subtle
+    for(let tx=0;tx<W;tx+=W/8) { ctx.fillStyle='rgba(15,30,18,.6)'; ctx.fillRect(tx,H*.62,1,H*.38); }
+  },
+  corridor(ctx, W, H) {
+    ctx.fillStyle='#060a08'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#070c0a'; ctx.fillRect(0,H*.64,W,H*.36);
+    ctx.fillStyle='#050708'; ctx.fillRect(0,0,W,H*.13);
+    for(let x=0;x<W;x+=5){
+      const v=Math.sin(x*.035)*.04;
+      ctx.fillStyle=`rgba(10,${18+v*30},12,0.85)`;
+      ctx.fillRect(x,H*.13,5,H*.51);
+    }
+    // ceiling pipes
+    ctx.fillStyle='#161e14'; ctx.fillRect(0,6,W,9); ctx.fillRect(0,19,W,5);
+    ctx.fillStyle='#0b130a'; ctx.fillRect(0,8,W,4);
+    // lamps
+    [.12,.32,.52,.72,.9].forEach((p,i)=>{
+      const x=W*p, flicker=i===2&&Math.random()>.6;
+      ctx.fillStyle=flicker?'#050708':'rgba(110,190,120,.6)';
+      ctx.fillRect(x-18,H*.13,36,3);
+      if(!flicker){ctx.fillStyle='rgba(90,170,100,.06)';ctx.fillRect(x-45,H*.13,90,H*.35);}
+    });
+    // doors on sides
+    const mkDoor=(dx,dw,col)=>{
+      ctx.fillStyle='#07100a'; ctx.fillRect(dx,H*.22,dw,H*.42);
+      ctx.strokeStyle=col; ctx.lineWidth=1; ctx.strokeRect(dx,H*.22,dw,H*.42);
+      // warning stripes
+      for(let s=0;s<6;s++){
+        ctx.fillStyle=s%2===0?'rgba(140,100,0,.45)':'rgba(0,0,0,.45)';
+        ctx.fillRect(dx+s*dw/6,H*.22,dw/6,H*.42);
+      }
+    };
+    mkDoor(W*.02,W*.12,'rgba(25,70,35,.6)');
+    mkDoor(W*.86,W*.12,'rgba(25,70,35,.6)');
+    // floor
+    for(let tx=0;tx<W;tx+=W/10){ctx.fillStyle='rgba(14,28,16,.6)';ctx.fillRect(tx,H*.64,1,H*.36);}
+  },
+  left_room(ctx, W, H) {
+    ctx.fillStyle='#040809'; ctx.fillRect(0,0,W,H);
+    // dim overhead
+    ctx.fillStyle='rgba(80,140,90,.04)'; ctx.fillRect(W*.3,0,W*.4,H*.5);
+    for(let i=0;i<6;i++){
+      const x=W*(i*.16+.03), cw=W*.13, ch=H*.28, cy=H*.52;
+      ctx.fillStyle='#070f0d'; ctx.fillRect(x,cy,cw,ch);
+      ctx.strokeStyle=i===2||i===4?'rgba(20,100,40,.5)':'rgba(60,20,20,.3)';
+      ctx.lineWidth=1; ctx.strokeRect(x,cy,cw,ch);
+      if(i===2){ctx.fillStyle='rgba(0,60,20,.35)';ctx.fillRect(x+2,cy+2,cw-4,ch*.6);ctx.fillStyle='rgba(0,180,40,.65)';ctx.fillRect(x+4,cy+4,4,8);}
+      if(i===4){ctx.fillStyle='rgba(0,50,15,.25)';ctx.fillRect(x+2,cy+2,cw-4,ch*.6);}
+    }
+    // dust
+    ctx.fillStyle='rgba(80,120,70,.06)';
+    for(let i=0;i<18;i++) ctx.fillRect(Math.random()*W,Math.random()*H,2,2);
+    // low light
+    ctx.fillStyle='rgba(50,100,60,.05)'; ctx.fillRect(0,0,W,H*.6);
+  },
+  right_room(ctx, W, H) {
+    ctx.fillStyle='#050809'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(18,30,22,.85)'; ctx.fillRect(0,H*.6,W*.45,H*.16); ctx.fillRect(W*.55,H*.6,W*.45,H*.16);
+    [W*.06,W*.62].forEach(mx=>{
+      ctx.fillStyle='#020608'; ctx.fillRect(mx,H*.33,W*.24,H*.24);
+      ctx.strokeStyle='rgba(25,80,38,.4)'; ctx.lineWidth=1; ctx.strokeRect(mx,H*.33,W*.24,H*.24);
+      ctx.fillStyle='rgba(0,50,18,.25)'; ctx.fillRect(mx+2,H*.33+2,W*.24-4,H*.24-4);
+    });
+    ctx.fillStyle='rgba(28,42,32,.85)'; ctx.fillRect(W*.83,H*.16,W*.15,H*.62);
+    ctx.strokeStyle='rgba(40,70,45,.5)'; ctx.lineWidth=1; ctx.strokeRect(W*.83,H*.16,W*.15,H*.62);
+    for(let d=0;d<4;d++) ctx.strokeRect(W*.835+2,H*.18+d*H*.14,W*.14,H*.13);
+    for(let i=0;i<6;i++){ctx.fillStyle='rgba(100,110,80,.07)';ctx.fillRect(Math.random()*W*.7,H*.62+Math.random()*H*.2,Math.random()*55+15,Math.random()*25+8);}
+  },
+  center_room(ctx, W, H) {
+    ctx.fillStyle='#040709'; ctx.fillRect(0,0,W,H);
+    for(let i=0;i<5;i++){
+      const x=W*(i*.18+.04), sw=W*.15, sh=H*.4;
+      ctx.fillStyle='#020508'; ctx.fillRect(x,H*.08,sw,sh);
+      ctx.strokeStyle='rgba(16,55,28,.55)'; ctx.lineWidth=1; ctx.strokeRect(x,H*.08,sw,sh);
+      if(i===2){ctx.fillStyle='rgba(0,70,20,.3)';ctx.fillRect(x+2,H*.08+2,sw-4,sh-4);}
+    }
+    // cable/plug area bottom right
+    ctx.fillStyle='#070f0c'; ctx.fillRect(W*.78,H*.68,W*.2,H*.28);
+    ctx.strokeStyle='rgba(25,80,40,.5)'; ctx.lineWidth=1; ctx.strokeRect(W*.78,H*.68,W*.2,H*.28);
+    ctx.strokeStyle='rgba(30,70,35,.6)'; ctx.lineWidth=3;
+    for(let c=0;c<5;c++){ctx.beginPath();ctx.moveTo(W*.78,H*.73+c*8);ctx.lineTo(W,H*.78+c*4);ctx.stroke();}
+  },
+  elevator(ctx, W, H) {
+    ctx.fillStyle='#050a0d'; ctx.fillRect(0,0,W,H);
+    const ex=W*.34,ew=W*.32,eh=H*.76,ey=H*.1;
+    ctx.fillStyle='#060e16'; ctx.fillRect(ex,ey,ew,eh);
+    ctx.strokeStyle='rgba(25,65,90,.5)'; ctx.lineWidth=2; ctx.strokeRect(ex,ey,ew,eh);
+    [[ex+5,ey+5],[ex+ew-5,ey+5],[ex+5,ey+eh-5],[ex+ew-5,ey+eh-5]].forEach(([bx,by])=>{
+      ctx.fillStyle='rgba(60,40,15,.8)'; ctx.fillRect(bx-3,by-3,6,6);
+      ctx.strokeStyle='rgba(25,60,80,.4)'; ctx.lineWidth=1; ctx.strokeRect(bx-3,by-3,6,6);
+    });
+    const px=ex+ew*.63, pw=ew*.28, ppy=ey+eh*.28, ph=eh*.38;
+    ctx.fillStyle='#040810'; ctx.fillRect(px,ppy,pw,ph);
+    ctx.strokeStyle='rgba(0,130,180,.35)'; ctx.lineWidth=1; ctx.strokeRect(px,ppy,pw,ph);
+    ['B1','B3','B8','B12','B21'].forEach((t,i)=>{
+      ctx.fillStyle=t==='B21'?'rgba(200,30,30,.85)':'rgba(0,180,210,.45)';
+      ctx.font=`${Math.round(ph*.1)}px monospace`; ctx.textAlign='center';
+      ctx.fillText(t,px+pw/2,ppy+ph*.14+i*ph*.18);
+    });
+    ctx.fillStyle='rgba(130,155,130,.2)'; ctx.font=`${Math.round(eh*.055)}px monospace`;
+    ctx.textAlign='left'; ctx.fillText('EU AINDA ESTOU AQUI',ex+6,ey+eh*.89);
+  },
+  subsolo(ctx, W, H) {
+    ctx.fillStyle='#020305'; ctx.fillRect(0,0,W,H);
+    const t = Date.now()/3000;
+    for(let i=0;i<18;i++){
+      const prog=Math.min(1,Math.max(0,(t-i*.11)));
+      if(prog<=0) continue;
+      const x=(i%6)*(W/6)+W*.04, y=Math.floor(i/6)*(H*.28)+H*.08;
+      ctx.fillStyle=`rgba(70,150,90,${prog*.11})`; ctx.fillRect(x,y,W*.11,H*.22);
+      ctx.strokeStyle=`rgba(70,150,90,${prog*.38})`; ctx.lineWidth=1; ctx.strokeRect(x,y,W*.11,H*.22);
+    }
+    // silhouette
+    if(Math.random()>.72){
+      ctx.fillStyle='rgba(70,190,90,.07)';
+      const sx=W*.73;
+      ctx.fillRect(sx,H*.15,W*.055,H*.54);
+      ctx.beginPath(); ctx.arc(sx+W*.027,H*.12,W*.035,0,Math.PI*2); ctx.fill();
+    }
+  },
+  ruel_room(ctx, W, H) {
+    ctx.fillStyle='#020208'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#030510'; ctx.fillRect(W*.1,H*.04,W*.8,H*.54);
+    ctx.strokeStyle='rgba(160,0,160,.38)'; ctx.lineWidth=3; ctx.strokeRect(W*.1,H*.04,W*.8,H*.54);
+    for(let y=H*.04;y<H*.58;y+=4){ctx.fillStyle='rgba(0,0,0,.22)';ctx.fillRect(W*.1,y,W*.8,2);}
+    [W*.02,W*.85].forEach(mx=>{ctx.fillStyle='#030510';ctx.fillRect(mx,H*.6,W*.11,H*.28);ctx.strokeStyle='rgba(25,90,40,.35)';ctx.lineWidth=1;ctx.strokeRect(mx,H*.6,W*.11,H*.28);});
+    ctx.fillStyle='rgba(160,0,160,.05)'; ctx.beginPath(); ctx.arc(W*.5,H*.3,W*.055,0,Math.PI*2); ctx.fill();
+  },
+};
+
+// ════════════════════════════════════════════════════════════════
+// SECTION 4: DIALOGUE ENGINE
+// ════════════════════════════════════════════════════════════════
+let _typeTimer = null;
+
+G.setChar = (charId, name) => {
+  $('spkName').textContent = name;
+  PORT.draw(charId);
+};
+
+G.typeText = (el, text, cb) => {
+  if (_typeTimer) clearInterval(_typeTimer);
+  let i = 0; el.textContent = '';
+  el.className = charId => charId === 'ruel' ? 'glitch' : '';
+  _typeTimer = setInterval(() => {
+    el.textContent += text[i++] || '';
+    if (i >= text.length) { clearInterval(_typeTimer); _typeTimer = null; if (cb) cb(); }
+  }, 20);
+};
+
+G.skipTyping = () => {
+  if (_typeTimer) { clearInterval(_typeTimer); _typeTimer = null; }
+};
+
+// Global click handler — advances dialogue
+document.getElementById('sGame').addEventListener('click', e => {
+  // Don't fire if clicking a button or choice
+  if (e.target.closest('button') || e.target.closest('.ch') || e.target.closest('#hudBar') || e.target.closest('#backBtn')) return;
+  G.sceneClick();
+});
+
+G.sceneClick = () => {
+  // Never advance if choices are showing
+  if ($('choicesDiv').style.display === 'flex') return;
+
+  if (G.S.typing) {
+    G.skipTyping();
+    const sc = SCENES[G.S.scene];
+    if (sc && sc.lines && sc.lines[G.S.lineIdx]) {
+      const l = sc.lines[G.S.lineIdx];
+      $('dialTxt').textContent = typeof l.text === 'function' ? l.text() : l.text;
+    }
+    G.S.typing = false;
+    $('advHint').classList.add('blink');
+    return;
+  }
+
+  // Waiting to go to next scene
+  if (G._waitingNext) {
+    G._waitingNext = false;
+    $('advHint').classList.remove('blink');
+    $('advHint').style.display = 'none';
+    const nxt = typeof G._nextTarget === 'function' ? G._nextTarget() : G._nextTarget;
+    G._nextTarget = null;
+    if (nxt) G.goScene(nxt);
+    return;
+  }
+
+  // Only advance lines if hint is visible
+  if ($('advHint').style.display === 'none') return;
+  G.S.lineIdx++;
+  G.renderLine();
+};
+
+// ════════════════════════════════════════════════════════════════
+// SECTION 5: SCENE SYSTEM
+// ════════════════════════════════════════════════════════════════
+G.goScene = (sceneId) => {
+  if (typeof sceneId === 'function') sceneId = sceneId();
+  if (!sceneId) return;
+  G.S.scene = sceneId;
+  G.S.lineIdx = 0;
+  G.S.typing = false;
+  G._waitingNext = false;
+  G._nextTarget = null;
+  G.saveState();
+
+  const sc = SCENES[sceneId];
+  if (!sc) { console.warn('Missing scene:', sceneId); return; }
+
+  // Minigame shortcut
+  if (sc.mg) { G.openMG(sc.mg); return; }
+
+  // Death shortcut
+  if (sc.death) { G.doDeath(sc.death.title, sc.death.body, sc.death.cause); return; }
+
+  // Final shortcut
+  if (sc.final) { G.doFinal(sc.final); return; }
+
+  G.showScr('sGame');
+  ART.draw(sc.art || 'corridor');
+  $('sceneLbl').textContent = sc.label || '';
+  G.hideItemCard();
+
+  // Back button
+  $('backBtn').style.display = sc.backTo ? 'block' : 'none';
+  $('backBtn').textContent = '← ' + (sc.backLabel || 'Voltar');
+  if (sc.backTo) G.S.backTarget = sc.backTo;
+
+  if (sc.effect) sc.effect();
+  G.renderLine();
+};
+
+G.goBack = () => {
+  if (G.S.backTarget) G.goScene(G.S.backTarget);
+};
+
+G.renderLine = () => {
+  const sc = SCENES[G.S.scene];
+  if (!sc) return;
+  const lines = sc.lines || [];
+  const idx = G.S.lineIdx;
+
+  if (idx >= lines.length) { G.showChoicesOrNext(); return; }
+
+  const line = lines[idx];
+  const charId = typeof line.char === 'function' ? line.char() : (line.char || 'narrator');
+  const name = typeof line.name === 'function' ? line.name() : (line.name || '???');
+  const text = typeof line.text === 'function' ? line.text() : (line.text || '');
+
+  G.setChar(charId, name);
+  const dt = $('dialTxt');
+  dt.className = charId === 'ruel' ? 'glitch' : '';
+  $('choicesDiv').style.display = 'none';
+  $('advHint').style.display = 'block';
+  $('advHint').classList.remove('blink');
+  $('advHint').textContent = '▼ clique em qualquer lugar';
+
+  G.typeText(dt, text, () => {
+    G.S.typing = false;
+    $('advHint').classList.add('blink');
+  });
+  G.S.typing = true;
+  $('dialArea')?.scrollTo(0, 999);
+};
+
+G.showChoicesOrNext = () => {
+  const sc = SCENES[G.S.scene];
+  if (!sc) return;
+  $('advHint').classList.remove('blink');
+  $('advHint').style.display = 'none';
+
+  if (sc.choices && sc.choices.length) {
+    const div = $('choicesDiv');
+    div.innerHTML = '';
+    div.style.display = 'flex';
+    sc.choices.forEach(ch => {
+      const btn = document.createElement('button');
+      btn.className = 'ch';
+      btn.textContent = ch.text;
+      btn.onclick = () => {
+        div.style.display = 'none';
+        if (ch.fn) ch.fn();
+      };
+      div.appendChild(btn);
+    });
+  } else if (sc.next) {
+    $('advHint').style.display = 'block';
+    $('advHint').textContent = '▼ clique para continuar';
+    $('advHint').classList.add('blink');
+    // Mark that we're waiting for a next-click
+    G._waitingNext = true;
+    G._nextTarget = sc.next;
+  }
+};
+
+// ════════════════════════════════════════════════════════════════
+// SECTION 6: SCENES DATA
+// ════════════════════════════════════════════════════════════════
+const SCENES = {};
+
+// Pronoun shortcuts
+const P = () => G.pr();
+const N = () => G.S.name;
+
+// ── ROOM START ──
+SCENES.room_start = {
+  art:'room_start', label:'SEU ESCRITÓRIO — NEXUS ENTERPRISE',
+  lines:[
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:()=>`${N()} lê o email pela segunda vez. Uma anomalia no data center. Prioridade máxima. Cinquenta anos de história da Nexus armazenados naqueles servidores — e algo está corrompendo tudo.`},
+    {char:'narrator', name:'NARRADOR', text:'A sala tem cheiro de ar condicionado velho. Monitores acesos. Uma xícara fria de café. O tipo de ambiente que existe às três da manhã.'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:()=>`${P().um} anomalia. Claro. Justo agora.`},
+    {char:'narrator', name:'NARRADOR', text:'Ao fundo do escritório, uma porta de metal reforçado leva ao corredor do data center. Há um monitor embutido nela — piscando.'},
+  ],
+  choices:[
+    {text:'Examinar a porta de metal.', fn:()=>G.goScene('door_examine')},
+    {text:'Verificar o email antes de sair.', fn:()=>G.goScene('read_email')},
+  ],
+};
+
+SCENES.read_email = {
+  art:'room_start', label:'EMAIL — NEXUS TI CENTRAL',
+  lines:[
+    {char:'system', name:'EMAIL', text:'DE: ti.central@nexus.corp\nPARA: você\nASSUNTO: URGENTE — Anomalia no Data Center\n\n"Uma anomalia em nosso sistema está causando a corrupção de arquivos críticos. Cinquenta anos de dados em risco. Sua presença é necessária imediatamente."'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Cinquenta anos. Desde o Grande Apagão. Desde que a Nexus surgiu do nada com uma solução que ninguém mais tinha.'},
+    {char:'narrator', name:'NARRADOR', text:'Você sempre achou estranho isso. Uma empresa que apareceu exatamente quando o mundo mais precisava. Mas ninguém pergunta quando as luzes voltam.'},
+  ],
+  next:'door_examine',
+};
+
+SCENES.door_examine = {
+  art:'room_start', label:'PORTA DO DATA CENTER',
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'A porta de metal reforçado tem um monitor embutido. Antigo — décadas de poeira na moldura. Mas o monitor pisca como novo.'},
+    {char:'system', name:'TERMINAL', text:'[ ACESSO RESTRITO — INSIRA CARTÃO ]'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Meu crachá deveria funcionar aqui.'},
+    {char:'system', name:'TERMINAL', text:'[ CARTÃO INVÁLIDO — ACESSO NEGADO ]'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Não funciona. O sistema nem reconheceu meu nível de acesso.'},
+    {char:'narrator', name:'NARRADOR', text:'O monitor continua piscando. Há fios expostos nas bordas — alguém já tentou arrombar essa porta antes.'},
+  ],
+  choices:[
+    {text:'Tentar arrancar o monitor da parede.', fn:()=>G.goScene('rip_monitor')},
+    {text:'Voltar e verificar se há outra saída.', fn:()=>G.goScene('no_other_exit')},
+  ],
+};
+
+SCENES.no_other_exit = {
+  art:'room_start', label:'SEM SAÍDA',
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'Nenhuma outra saída. O escritório tem paredes de concreto. A única via de acesso ao data center é aquela porta.'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Vai ter que ser na força.'},
+  ],
+  next:'rip_monitor',
+};
+
+SCENES.rip_monitor = {
+  art:'room_start', label:'ARRANCANDO O MONITOR',
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'Com ferramentas do kit de manutenção do escritório, você começa a desencaixar o painel do monitor.'},
+    {char:'narrator', name:'NARRADOR', text:'A tela arranca com um barulho seco de plástico e metal. Fios expostos. Dezenas deles, coloridos, organizados por alguém que claramente sabia o que fazia.'},
+    {char:'narrator', name:'NARRADOR', text:'E na tela ainda ligada — por uma fração de segundo — a imagem de uma pessoa.'},
+    {char:'ruel', name:'???', text:'n̷̡͝ã̵͔o̴̢̒ ̷̘͌c̸͕͝o̶̡͒n̷̦͌e̷̦͋c̵̙̀t̵̤̀a̸̜͘ ̶̕o̵ ̶ú̴l̵t̸i̸m̵o̶'},
+    {char:'system', name:'SISTEMA', text:'[ MINIGAME: CIRCUITO DE PULSOS ]'},
+  ],
+  next: () => { G.openMG('wire'); return null; },
+};
+
+SCENES.after_wire_good = {
+  art:'corridor', label:'DATA CENTER — CORREDOR PRINCIPAL',
+  effect:()=>{ G.flashGood(); G.setSync(G.S.sync+10); },
+  lines:[
+    {char:'system', name:'SISTEMA', text:'[ SINCRONIZAÇÃO — ACESSO CONCEDIDO ]'},
+    {char:'narrator', name:'NARRADOR', text:'A porta abre com um clique mecânico grave. Além dela: o corredor do data center.'},
+    {char:'narrator', name:'NARRADOR', text:'Três direções. À esquerda: área técnica antiga. Ao centro: o elevador. À direita: a área de arquivos.'},
+  ],
+  next:'corridor_hub',
+};
+
+SCENES.after_wire_bad = {
+  art:'corridor', label:'DATA CENTER — CORREDOR PRINCIPAL',
+  effect:()=>{ G.flashBad(); G.setSync(G.S.sync-20); G.glitch(2000); },
+  lines:[
+    {char:'ruel', name:'VOZ DISTORCIDA', text:'V̸o̷c̵ê̸ ̶n̶ã̸o̸ ̴d̴e̸v̸i̸a̸.'},
+    {char:'narrator', name:'NARRADOR', text:'A porta abre mesmo assim. Mas algo mudou. Uma sensação de que você está sendo observado.'},
+  ],
+  next:'corridor_hub',
+};
+
+SCENES.corridor_hub = {
+  art:'corridor', label:'DATA CENTER — CORREDOR PRINCIPAL',
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'O corredor do data center. Lâmpadas fluorescentes. Racks de servidores. O cheiro de ar frio e eletrônica aquecida.'},
+    {char:'narrator', name:'NARRADOR', text:'Uma lâmpada no centro pisca sem ritmo. Ao longe, um clique rítmico — como um coração dentro das máquinas.'},
+  ],
+  choices:[
+    {text:'Ir para o corredor da esquerda (área técnica).', fn:()=>G.goScene('left_enter')},
+    {text:'Tentar o elevador ao centro.', fn:()=>G.goScene('elev_first')},
+    {text:'Ir para o corredor da direita (arquivos).', fn:()=>G.goScene('right_enter')},
+  ],
+};
+
+// ── ELEVADOR ──
+SCENES.elev_first = {
+  art:'elevator', label:'ELEVADOR — CORREDOR CENTRAL', backTo:'corridor_hub', backLabel:'Corredor principal',
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'O elevador tem décadas de ferrugem. Na parede interna, alguém gravou a ponto de metal: "EU AINDA ESTOU AQUI."'},
+    {char:'system', name:'TERMINAL', text:'[ INSIRA SEUS DADOS ]'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Meu crachá não serve aqui. Preciso de outra coisa.'},
+  ],
+  choices:[
+    {text:'Inserir o crachá mesmo assim.', fn:()=>G.goScene('elev_fail1')},
+    {text:'Voltar e explorar os corredores.', fn:()=>G.goScene('corridor_hub')},
+  ],
+};
+
+SCENES.elev_fail1 = {
+  art:'elevator', label:'ELEVADOR', backTo:'elev_first', backLabel:'Voltar',
+  lines:[
+    {char:'system', name:'TERMINAL', text:'[ DADOS INVÁLIDOS — ACESSO NEGADO ]'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Esperado.'},
+  ],
+  choices:[
+    {text:'Tentar novamente.', fn:()=>G.goScene('elev_fail2')},
+    {text:'Explorar os corredores primeiro.', fn:()=>G.goScene('corridor_hub')},
+  ],
+};
+
+SCENES.elev_fail2 = {
+  art:'elevator', label:'ELEVADOR',
+  effect:()=>{
+    G.glitch(900); G.flashBad();
+    if(!G.hasFlag('sawFlash')){
+      G.setFlag('sawFlash');
+      // Note: only records that a pattern was seen, NOT the full password
+      G.addItem('nota_flash','Nota: Padrão no Monitor','pista',
+        'Você viu um padrão por 0.3 segundos no monitor do elevador.\n\nEra uma sequência de letras e números alternados.\n\nPrecisa descobrir o que significa — procure nos corredores.',['elev_code','corridor_hub']);
+    }
+  },
+  lines:[
+    {char:'system', name:'TERMINAL', text:'[ DADOS INVÁLIDOS ]'},
+    {char:'narrator', name:'NARRADOR', text:'O monitor pisca mais rápido. Por uma fração de segundo — rápido demais para processar — um padrão aparece na tela.'},
+    {char:'narrator', name:'NARRADOR', text:'Depois desaparece. Você mal teve tempo de ler. Parecia... letras e números misturados. Uma sequência.'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Esse padrão deve estar em algum documento por aqui. Preciso procurar nos corredores.'},
+  ],
+  choices:[
+    {text:'Explorar os corredores para descobrir o código.', fn:()=>G.goScene('corridor_hub')},
+    {text:'Tentar adivinhar o padrão (arriscado).', fn:()=>G.openMG('elev_code')},
+  ],
+};
+
+SCENES.elev_with_code = {
+  art:'elevator', label:'ELEVADOR — COM CÓDIGO', backTo:'corridor_hub', backLabel:'Corredor principal',
+  effect:()=>{
+    if(G.hasItem('pasta_vermelha')) G.showItemCard('PASTA VERMELHA','Código: 170492\nPadrão: R-17-U-04-E-92-L');
+  },
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'O monitor do elevador pisca esperando. Agora você tem o que precisa.'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:()=>`Código: ${G.hasFlag('hasPasta')?'170492':'???'}. Padrão: R-17-U-04-E-92-L. Cinco tentativas. Não posso errar.`},
+  ],
+  choices:[
+    {text:'Inserir o código (5 tentativas — falhar = morte).', fn:()=>G.openMG('elev_code')},
+    {text:'Explorar mais antes de arriscar.', fn:()=>G.goScene('corridor_hub')},
+  ],
+};
+
+// ── CORREDOR ESQUERDO ──
+SCENES.left_enter = {
+  art:'left_room', label:'CORREDOR ESQUERDO — ÁREA TÉCNICA LEGADA', backTo:'corridor_hub', backLabel:'Corredor principal',
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'O corredor da esquerda é mais escuro. Lâmpadas cobertas de poeira amarelada. No fim: uma sala com a porta entreaberta.'},
+    {char:'narrator', name:'NARRADOR', text:'Seis computadores antigos. Monitores CRT. Teclados mecânicos sob centímetros de pó. Modelos dos anos 70 pós-Apagão.'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Alguém guardou tudo isso aqui. Por quê manter PCs legados ligados?'},
+  ],
+  choices:[
+    {text:'Examinar o PC que parece funcionar (PC-3).', fn:()=>G.goScene('left_pc3_examine')},
+    {text:'Vasculhar os PCs desligados.', fn:()=>G.goScene('left_examine_dead')},
+    {text:'Procurar documentos físicos na sala.', fn:()=>G.goScene('left_search')},
+    {text:'Voltar ao corredor principal.', fn:()=>G.goScene('corridor_hub')},
+  ],
+};
+
+SCENES.left_examine_dead = {
+  art:'left_room', label:'PCs INATIVOS', backTo:'left_enter', backLabel:'Voltar',
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'PC-1: desligado, tela rachada. PC-2: queimado. PC-4: disco rígido fisicamente removido. PC-5: loop infinito de boot.'},
+    {char:'narrator', name:'NARRADOR', text:'PC-6, no canto, tem um post-it. O texto está quase ilegível pela poeira e pelo tempo.'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'"...não esquecer... pasta... vermelha..."'},
+  ],
+  effect:()=>G.addLore('postit','Post-it no PC-6','Texto parcialmente legível:\n"...não esquecer... PASTA VERMELHA..."\n\nO papel tem pelo menos 15 anos de idade.'),
+  choices:[
+    {text:'Procurar a pasta vermelha.', fn:()=>G.goScene('left_search')},
+    {text:'Tentar o PC-3.', fn:()=>G.goScene('left_pc3_examine')},
+  ],
+};
+
+SCENES.left_search = {
+  art:'left_room', label:'VASCULHANDO A SALA', backTo:'left_enter', backLabel:'Voltar',
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'Armários enferrujados. Papéis em decomposição. Uma gaveta que cede depois de muita força.'},
+    {char:'narrator', name:'NARRADOR', text:'Dentro: uma pasta de plástico vermelho. Com documentos.'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'A pasta vermelha.'},
+    {char:'narrator', name:'NARRADOR', text:'Contém: lista de funcionários, relatório de acesso antigo, e uma anotação à mão.\n\n"CÓDIGO PRINCIPAL: 170492"\n"PADRÃO: R-17-U-04-E-92-L"'},
+  ],
+  effect:()=>{
+    G.flashGood(); G.setFlag('hasPasta');
+    G.addItem('pasta_vermelha','Pasta Vermelha','item',
+      'Pasta de plástico vermelho — encontrada na gaveta da sala legada.\n\nConteúdo:\n• Lista de funcionários (maioria riscada)\n• Anotação à mão:\n  CÓDIGO: 170492\n  PADRÃO: R-17-U-04-E-92-L\n\nA pasta tem pelo menos 15 anos.',
+      ['elev_code','elev_with_code','elev_first']);
+    G.addLore('codigo','Código do Elevador','Pasta Vermelha revela:\n\nCódigo: 170492\nPadrão de autenticação: R-17-U-04-E-92-L\n\nO mesmo padrão do flash no monitor.');
+  },
+  choices:[
+    {text:'Examinar a lista de funcionários.', fn:()=>G.goScene('left_employee_list')},
+    {text:'Tentar o PC-3 com essa informação.', fn:()=>G.goScene('left_pc3_examine')},
+    {text:'Ir ao elevador com o código.', fn:()=>G.goScene('elev_with_code')},
+  ],
+};
+
+SCENES.left_employee_list = {
+  art:'left_room', label:'LISTA DE FUNCIONÁRIOS', backTo:'left_search', backLabel:'Voltar',
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'Dezenas de nomes. Quase todos riscados com caneta vermelha. Data de "desligamento" ao lado de cada um.'},
+    {char:'narrator', name:'NARRADOR', text:'Um nome não está riscado:\n\nRUEL ANDRADE — Analista de Sistemas\nStatus: CONTIDO\nData: [ano do Apagão — 50 anos atrás]'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'"Contido." Não demitido. Não transferido. Contido.'},
+  ],
+  effect:()=>G.addLore('lista_func','Lista de Funcionários','Pasta Vermelha — lista de pessoal.\n\nTodos os nomes riscados, exceto:\nRUEL ANDRADE — Analista de Sistemas\nStatus: CONTIDO (não demitido)\nData: ano do Grande Apagão\n\nO que significa "contido"?'),
+  choices:[
+    {text:'Tentar o PC-3 com o nome de Ruel.', fn:()=>G.goScene('left_pc3_examine')},
+    {text:'Ir para o corredor da direita.', fn:()=>G.goScene('right_enter')},
+  ],
+};
+
+SCENES.left_pc3_examine = {
+  art:'left_room', label:'PC-3 — SISTEMA LEGADO', backTo:'left_enter', backLabel:'Voltar',
+  lines:[
+    {char:'system', name:'PC-3', text:'[INICIALIZANDO... SISTEMA LEGADO v2.1]\n[AGUARDANDO LOGIN]'},
+    {char:'narrator', name:'NARRADOR', text:'O único PC que funciona. A tela pisca com um cursor esperando credenciais.'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:()=>G.hasFlag('hasPasta')?'Tenho o usuário e a senha. RUEL e R-17-U-04-E-92-L.':'Preciso descobrir o usuário e a senha. Vou ter que procurar.'},
+  ],
+  choices:[
+    {text:'Acessar o PC-3 [MINIGAME].', fn:()=>G.openMG('pc_login')},
+    {text:'Procurar pistas antes.', fn:()=>G.goScene('left_search')},
+    {text:'Voltar.', fn:()=>G.goScene('left_enter')},
+  ],
+};
+
+SCENES.after_pc_login = {
+  art:'left_room', label:'PC-3 — ACESSO CONCEDIDO',
+  lines:[
+    {char:'system', name:'PC-3', text:'LOGIN: RUEL ANDRADE\nÚLTIMO ACESSO: 50 anos atrás\n[ACESSANDO ARQUIVOS OCULTOS...]'},
+    {char:'ruel', name:'RUEL — LOG 001', text:'"Descobri o que fizeram. O Apagão não foi acidente. A Nexus desenvolveu tecnologia para causar a falha de toda energia convencional. Usaram. Venderam a solução que já tinham pronta."'},
+    {char:'ruel', name:'RUEL — LOG 089', text:'"A única forma de preservar as provas é guardar dentro de mim. Dentro do sistema. Não é elegante. Mas é permanente."'},
+    {char:'ruel', name:'RUEL — LOG 247', text:'"Hoje é o último dia que existo como ser humano. Espero que alguém encontre isso."'},
+    {char:'narrator', name:'NARRADOR', text:'O nome no sistema pisca:\nRUEL → RUEL_?'},
+  ],
+  effect:()=>{
+    G.flashGood(); G.setFlag('knowsRuel');
+    G.addLore('ruel_logs','Logs de Ruel (PC-3)','Log 001: "O Apagão foi deliberado. A Nexus causou a crise. Vendeu a cura."\n\nLog 089: "A única forma de preservar as provas é guardar dentro de mim."\n\nLog 247: "Hoje é o último dia que existo como ser humano."\n\nO padrão de senha do PC-3 é o mesmo do elevador.');
+  },
+  choices:[
+    {text:'Ir ao elevador com o código.', fn:()=>G.goScene('elev_with_code')},
+    {text:'Explorar o corredor da direita antes.', fn:()=>G.goScene('right_enter')},
+  ],
+};
+
+// ── CORREDOR DIREITO ──
+SCENES.right_enter = {
+  art:'right_room', label:'CORREDOR DIREITO — ARQUIVO HISTÓRICO', backTo:'corridor_hub', backLabel:'Corredor principal',
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'O corredor da direita tem um ar corporativo. Mesas, arquivos, computadores. Como se um escritório tivesse sido abandonado no meio de um dia de trabalho.'},
+    {char:'narrator', name:'NARRADOR', text:'Quatro computadores. Cada um com informações diferentes.'},
+  ],
+  choices:[
+    {text:'PC-A: Registros de funcionários.', fn:()=>G.goScene('right_pc_a')},
+    {text:'PC-B: Imagens da empresa.', fn:()=>G.goScene('right_pc_b')},
+    {text:'PC-C: Dados e testes.', fn:()=>G.goScene('right_pc_c')},
+    {text:'PC-D: Documentos internos.', fn:()=>G.goScene('right_pc_d')},
+    {text:'Voltar ao corredor principal.', fn:()=>G.goScene('corridor_hub')},
+  ],
+};
+
+SCENES.right_pc_a = {
+  art:'right_room', label:'PC-A — REGISTRO DE PESSOAL', backTo:'right_enter', backLabel:'Voltar',
+  lines:[
+    {char:'system', name:'PC-A', text:'REGISTRO DE PESSOAL\n\nRuel Andrade — Analista de Sistemas — ❌ REMOVIDO\nMariana Costa — Gerente — ❌ DESLIGADO\nRafael Barros — Seg. Info — ✅ ATIVO\nJuliana Mendes — CTO — ✅ ATIVO'},
+    {char:'narrator', name:'NARRADOR', text:'O registro de Ruel tem uma nota que os outros não têm:\n"REMOVIDO DO SISTEMA — VER PROTOCOLO 17"\n\nMotivo do desligamento: [EM BRANCO]'},
+    {char:'narrator', name:'NARRADOR', text:'Enquanto você lê, o texto pisca por um segundo:\nRUEL → RUEL_?'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'O sistema está modificando o registro em tempo real.'},
+  ],
+  effect:()=>{ G.glitch(700); G.setFlag('sawPCA'); G.addLore('pc_a_rec','Registro Pessoal (PC-A)','Ruel Andrade — único com nota especial:\n"REMOVIDO DO SISTEMA — VER PROTOCOLO 17"\nMotivo: [EM BRANCO]\n\nDurante a leitura, o nome mudou para "RUEL_?"'); },
+  next:'right_enter',
+};
+
+SCENES.right_pc_b = {
+  art:'right_room', label:'PC-B — IMAGENS DA EMPRESA', backTo:'right_enter', backLabel:'Voltar',
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'Fotos da empresa ao longo dos anos. Em uma imagem de 50 anos atrás: um grupo de engenheiros. Um deles identificado como Ruel Andrade.'},
+    {char:'narrator', name:'NARRADOR', text:'A foto seguinte — mesma cena, mesmo ângulo — Ruel não está lá. Apagado da imagem.'},
+    {char:'narrator', name:'NARRADOR', text:'A tela pisca. Por um segundo, na foto com o grupo completo — Ruel parece virar a cabeça. Olhar direto para você.'},
+  ],
+  effect:()=>{ G.glitch(900); G.flashBad(); G.setFlag('sawPCB'); G.addLore('pc_b_img','Fotos da Empresa (PC-B)','Foto 1: Ruel com engenheiros, 50 anos atrás.\nFoto 2: Mesma cena. Ruel apagado.\n\nDurante a visualização, ele pareceu olhar diretamente para você.\n\nA empresa o apagou da história.'); },
+  next:'right_enter',
+};
+
+SCENES.right_pc_c = {
+  art:'right_room', label:'PC-C — DADOS E TESTES', backTo:'right_enter', backLabel:'Voltar',
+  lines:[
+    {char:'system', name:'PC-C', text:'PROJETO TRANSFERÊNCIA — STATUS: CONCLUÍDO\n\nUso de memória: 847 TB\nAtividade cerebral simulada: 98.3%\nTransferência de dados: COMPLETA\nIntegridade da consciência: [CORROMPIDO]'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'"Atividade cerebral simulada." Transferência de consciência. O que a Nexus fez com Ruel?'},
+    {char:'ruel', name:'SISTEMA', text:'"eles mentiram"'},
+    {char:'narrator', name:'NARRADOR', text:'A linha desaparece. O sistema volta ao normal.'},
+  ],
+  effect:()=>{ G.glitch(1000); G.flashBad(); G.setFlag('sawPCC'); G.addLore('pc_c_data','Projeto Transferência (PC-C)','PROJETO TRANSFERÊNCIA — CONCLUÍDO\n\nMemória: 847 TB\nAtividade cerebral: 98.3%\nTransferência: COMPLETA\nIntegridade: [CORROMPIDO]\n\nMensagem que apareceu sozinha:\n"eles mentiram"'); },
+  next:'right_enter',
+};
+
+SCENES.right_pc_d = {
+  art:'right_room', label:'PC-D — DOCUMENTOS INTERNOS', backTo:'right_enter', backLabel:'Voltar',
+  lines:[
+    {char:'system', name:'DOC-0047', text:'"instabilidade detectada no sistema principal"\n"necessário conter o sujeito"\n"não divulgar ao setor externo"\n"sujeito demonstra resistência ao protocolo"'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'"Sujeito." Eles se referiam a Ruel como sujeito.'},
+    {char:'narrator', name:'NARRADOR', text:'Uma tela apagada acende sozinha e exibe:'},
+    {char:'ruel', name:'RUEL', text:'EU AINDA ESTOU AQUI'},
+    {char:'narrator', name:'NARRADOR', text:'A tela apaga. Silêncio.'},
+  ],
+  effect:()=>{ G.flashBad(); G.glitch(900); G.setFlag('sawPCD'); G.addLore('pc_d_docs','Documentos Internos (PC-D)','"instabilidade detectada"\n"necessário conter o sujeito"\n"não divulgar ao setor externo"\n\nUma tela exibiu sozinha:\n"EU AINDA ESTOU AQUI"\n\nRuel está vivo e sabe que você está lá.'); },
+  next:'right_enter',
+};
+
+// ── CENTRO — Sala de sistemas ──
+SCENES.center_enter = {
+  art:'center_room', label:'CORREDOR CENTRAL — SALA DE SISTEMAS', backTo:'corridor_hub', backLabel:'Corredor principal',
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'No fim do corredor central: uma sala. Telas grandes, todas desligadas. O ambiente é escuro — apenas a luz do celular alcança.'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Preciso de energia. Tem que haver uma tomada em algum lugar.'},
+    {char:'narrator', name:'NARRADOR', text:'Enquanto caminha no escuro, tropeça em algo. Um cabo. E seguindo o cabo...'},
+  ],
+  choices:[
+    {text:'Procurar a tomada [MINIGAME].', fn:()=>G.openMG('find_plug')},
+    {text:'Voltar.', fn:()=>G.goScene('corridor_hub')},
+  ],
+};
+
+SCENES.center_powered = {
+  art:'center_room', label:'SALA DE SISTEMAS — LIGADA',
+  effect:()=>G.setFlag('centerOn'),
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'Todas as telas ligam de uma vez — piscando, instáveis. Os sistemas acordam depois de décadas de sono.'},
+    {char:'system', name:'SISTEMA', text:'[ DESEJA SAIR? ]\n  CANCELAR\n  SAIR E SALVAR\n  VOLTAR'},
+  ],
+  choices:[
+    {text:'CANCELAR.', fn:()=>G.goScene('center_cancel')},
+    {text:'SAIR E SALVAR [MINIGAME].', fn:()=>G.openMG('save_select')},
+    {text:'VOLTAR (ignorar).', fn:()=>G.goScene('corridor_hub')},
+  ],
+};
+
+SCENES.center_cancel = {
+  art:'center_room', label:'FALHA TOTAL',
+  effect:()=>{ G.flashBad(); G.glitch(1500); G.setSync(G.S.sync-10); },
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'O sistema entra em pane. Uma tela congela. Duas duplicam informações. Uma reinicia. Duas apagam.'},
+    {char:'narrator', name:'NARRADOR', text:'A que reiniciou está sem arquivos. Falha total.'},
+    {char:'system', name:'SISTEMA', text:'[ FALHA — NENHUM DADO RECUPERÁVEL ]'},
+  ],
+  next:'corridor_hub',
+};
+
+// ── DESCIDA ──
+SCENES.elevator_descent = {
+  art:'subsolo', label:'DESCENDO — B-21',
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'O elevador desce. Devagar. B-1... B-3... B-8... B-12... B-21.'},
+    {char:'narrator', name:'NARRADOR', text:'Quinze andares abaixo. Um lugar que não existe em nenhum mapa oficial.'},
+    {char:'narrator', name:'NARRADOR', text:'A escuridão vai sendo iluminada aos poucos — luzes quadradas se acendem uma a uma, como pixels numa tela sendo ligada.'},
+    {char:'narrator', name:'NARRADOR', text:'Ao sair do elevador: no canto do olho, uma silhueta. Uma pessoa acompanhando pelo corredor paralelo. Você pisca — e não há nada.'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Imaginação. Tem que ser.'},
+  ],
+  next:'ruel_approach',
+};
+
+SCENES.ruel_approach = {
+  art:'ruel_room', label:'NÍVEL B-21 — CÂMARA CENTRAL',
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'O corredor leva a uma sala. Monitores nas paredes exibem logs e processos. No centro: uma tela grande. Ela acende quando você entra.'},
+    {char:'ruel', name:'RUEL', text:'Você chegou.'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Você é Ruel.'},
+    {char:'ruel', name:'RUEL', text:'Fui. Agora sou outra coisa. Cinquenta anos aqui dentro. Com as provas que destruiriam a empresa que me fez isso.'},
+    {char:'ruel', name:'RUEL', text:'O Apagão não foi acidente. A Nexus criou a tecnologia. Causaram a crise. Venderam a cura. Controlam a energia do planeta há cinquenta anos.'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'E você descobriu. E se digitalizou para guardar as provas.'},
+    {char:'ruel', name:'RUEL', text:'Me tornei o cofre. Me tornei a anomalia que você veio investigar.'},
+  ],
+  next:'ruel_choice',
+};
+
+SCENES.ruel_choice = {
+  art:'ruel_room', label:'CÂMARA CENTRAL — DECISÃO',
+  lines:[
+    {char:'ruel', name:'RUEL', text:'Me ajude. Ou me delete. Mas saiba: se me deletar, tudo o que sei vai junto. E se me libertar — a Nexus vai perceber. Vai te encontrar.'},
+    {char:'system', name:'SISTEMA', text:'[ DECISÃO CRÍTICA ]'},
+  ],
+  choices:[
+    {text:'Deletar Ruel — é o meu trabalho.', fn:()=>{ G.S.path='delete'; G.goScene('path_delete_intro'); }},
+    {text:'Transferir Ruel para fora do sistema.', fn:()=>{ G.S.path='transfer'; G.goScene('path_transfer_intro'); }},
+    {text:'Entrar com Ruel — me digitalizar também.', fn:()=>{ G.S.path='merge'; G.goScene('path_merge_intro'); }},
+    {text:'Ajudar Ruel a construir um corpo físico.', fn:()=>{ G.S.path='body'; G.goScene('path_body_intro'); }},
+  ],
+};
+
+SCENES.path_delete_intro = {
+  art:'ruel_room', label:'PROTOCOLO DE ELIMINAÇÃO',
+  lines:[
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Tenho um trabalho. A anomalia precisa ser eliminada.'},
+    {char:'ruel', name:'RUEL', text:'Eu entendo. Mas você vai viver sabendo que apagou a única prova de um crime de cinquenta anos.'},
+    {char:'system', name:'SISTEMA', text:'[ BOSS FIGHT: RESISTÊNCIA DE CONSCIÊNCIA ]'},
+  ],
+  next:()=>{ G.openMG('boss'); return null; },
+};
+
+SCENES.path_transfer_intro = {
+  art:'ruel_room', label:'PROTOCOLO DE TRANSFERÊNCIA',
+  lines:[
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Posso te mover para um servidor externo. Fora da rede deles.'},
+    {char:'ruel', name:'RUEL', text:'Você vai ter que ser o canal. Não sei o que vai restar de você.'},
+    {char:'system', name:'SISTEMA', text:'[ BOSS FIGHT: FIREWALL ]'},
+  ],
+  next:()=>{ G.openMG('boss'); return null; },
+};
+
+SCENES.path_merge_intro = {
+  art:'ruel_room', label:'PROTOCOLO DE FUSÃO',
+  lines:[
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'E se eu entrar com você? Me digitalizar também?'},
+    {char:'ruel', name:'RUEL', text:'Você entende o que está abrindo mão?'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Você não deveria ficar sozinho por mais cinquenta anos.'},
+    {char:'system', name:'SISTEMA', text:'[ BOSS FIGHT: SINCRONIZAÇÃO ]'},
+  ],
+  next:()=>{ G.openMG('boss'); return null; },
+};
+
+SCENES.path_body_intro = {
+  art:'ruel_room', label:'PROTOCOLO DE TRANSFERÊNCIA FÍSICA',
+  lines:[
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'E se construíssemos um corpo para você? Transferir de volta ao físico?'},
+    {char:'ruel', name:'RUEL', text:'Cinquenta anos pensei que era impossível. Mas você tem acesso ao laboratório no nível B-8.'},
+    {char:'ruel', name:'RUEL', text:'Quando você subir com os dados — eles vão perceber.'},
+    {char:'system', name:'SISTEMA', text:'[ BOSS FIGHT: PREPARAÇÃO ]'},
+  ],
+  next:()=>{ G.openMG('boss'); return null; },
+};
+
+SCENES.boss_win = {
+  art:'ruel_room', label:'CÂMARA CENTRAL',
+  lines:[{char:'ruel', name:'RUEL', text:'Você é mais forte do que eu esperava.'},{char:'narrator', name:'NARRADOR', text:'A tela pulsa mais devagar. Ruel cedeu — ou confiou.'}],
+  next:()=>{
+    if(G.S.path==='delete') return 'do_final_delete';
+    if(G.S.path==='transfer') return 'do_final_transfer';
+    if(G.S.path==='merge') return 'do_final_merge';
+    if(G.S.path==='body') return 'body_go_up';
+    return 'do_final_delete';
+  },
+};
+
+SCENES.boss_lose = {
+  art:'ruel_room', label:'ABSORVIDA',
+  effect:()=>{ G.flashBad(); G.saveMural('morte_boss','death'); },
+  lines:[
+    {char:'ruel', name:'RUEL', text:'Cinquenta anos me preparando. Você teve uma tarde.'},
+    {char:'ruel', name:'RUEL', text:'D̸e̷s̷c̸a̸n̴s̸e̸.̷'},
+  ],
+  death:{ title:'CONSCIÊNCIA ABSORVIDA', body:'Ruel levou cinquenta anos se preparando.\n\nVocê levou uma tarde.\n\nSua consciência foi absorvida. Agora faz parte do sistema, junto com Ruel.\n\nA diferença é que você não tem nome próprio lá dentro.', cause:'CAUSA: Confronto com consciência digitalizada — derrota.' },
+};
+
+SCENES.body_go_up = {
+  art:'elevator', label:'SUBINDO DE VOLTA',
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'O elevador sobe. Você tem os dados de Ruel em um drive portátil — o suficiente para começar o processo no laboratório B-8.'},
+    {char:'narrator', name:'NARRADOR', text:'Mas ao sair do elevador, no corredor principal:'},
+    {char:'santos', name:'DIR. SANTOS', text:'Engenheira. Uma palavra.'},
+    {char:'narrator', name:'NARRADOR', text:'Um homem de terno. Crachá dourado — nível executivo. A expressão não é curiosidade. É suspeita.'},
+    {char:'santos', name:'DIR. SANTOS', text:'Você estava no sub-nível B-21. Esse acesso não consta na sua autorização.'},
+  ],
+  next:()=>{ G.openMG('sus_check'); return null; },
+};
+
+SCENES.sus_pass = {
+  art:'corridor', label:'SAÍDA',
+  lines:[
+    {char:'santos', name:'DIR. SANTOS', text:'Mantenha o relatório atualizado. Sem mais sub-níveis não autorizados.'},
+    {char:'narrator', name:'NARRADOR', text:'Ele vai embora. A expressão dele diz que a conversa não terminou.'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Preciso terminar isso rápido.'},
+  ],
+  next:'do_final_body',
+};
+
+SCENES.do_final_delete = {
+  art:'ruel_room', label:'ELIMINAÇÃO',
+  effect:()=>G.flashBad(),
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'Você executa o protocolo. Os arquivos são apagados — incluindo as provas do Apagão.'},
+    {char:'ruel', name:'RUEL', text:'...eu esperava que fosse diferente.'},
+    {char:'system', name:'SISTEMA', text:'[ ANOMALIA ELIMINADA ]\n[ OBRIGADO PELO SERVIÇO ]'},
+  ],
+  final:'eliminacao',
+};
+
+SCENES.do_final_transfer = {
+  art:'ruel_room', label:'TRANSFERÊNCIA',
+  effect:()=>G.flashBad(),
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'Ruel atravessa você como uma corrente de dados. Cinquenta anos de consciência passam em segundos.'},
+    {char:'narrator', name:'NARRADOR', text:'Ele chegou do outro lado. Você não.'},
+  ],
+  final:'sacrificio',
+};
+
+SCENES.do_final_merge = {
+  art:'ruel_room', label:'FUSÃO',
+  effect:()=>G.flashGood(),
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'Você entra. Não dói. É como afundar em algo que sempre existiu.'},
+    {char:'ruel', name:'RUEL', text:'...você veio.'},
+    {char:'narrator', name:'NARRADOR', text:'De dentro, vocês dois enviam tudo. O escândalo do Apagão explode.'},
+  ],
+  final:'verdadeiro',
+};
+
+SCENES.do_final_body = {
+  art:'corridor', label:'FINAL: CORPO',
+  effect:()=>G.flashGood(),
+  lines:[
+    {char:'narrator', name:'NARRADOR', text:'O processo levou semanas. O laboratório B-8 tinha tudo — como se alguém tivesse planejado isso há décadas.'},
+    {char:'narrator', name:'NARRADOR', text:'No dia que Ruel abriu os olhos — olhos reais — ele ficou em silêncio por um longo tempo.'},
+    {char:'ruel', name:'RUEL', text:'Eu esqueci como era... sentir temperatura.'},
+    {char:'narrator', name:'NARRADOR', text:'Publicaram tudo. A Nexus caiu. O escândalo do Apagão foi global.'},
+    {char:'narrator', name:'NARRADOR', text:'Mas o processo de transferência de volta ao físico tem um custo que ninguém calculou completamente.'},
+    {char:'ruel', name:'RUEL', text:'Eu tentei te dizer. O processo é de mão dupla. Para eu voltar ao físico, alguém precisa ocupar o espaço vazio que eu deixo no sistema.'},
+    {char:()=>G.S.gen==='m'?'player_m':'player_f', name:N, text:'Eu... eu não entendi o que isso significava.'},
+    {char:'narrator', name:'NARRADOR', text:()=>`${N()} sentiu o mundo físico parar de reconhecê-l${G.S.gen==='m'?'o':'a'}. Não como queda. Como dissolução.`},
+    {char:'ruel', name:'RUEL', text:'Perdoa-me.'},
+    {char:'narrator', name:'NARRADOR', text:()=>`${N()} nunca respondeu.`},
+  ],
+  next:()=>{ G.saveMural('corpo','ending'); G.doFinal('corpo'); return null; },
+};
+
+// ════════════════════════════════════════════════════════════════
+// SECTION 7: FINALS & DEATH
+// ════════════════════════════════════════════════════════════════
+const FINALS = {
+  demissao:{num:'01',col:'#c89040',tit:'FINAL: IGNORÂNCIA',body:`Você ignorou o email.\n\nSemana seguinte: "Investigação concluída por equipe externa. Anomalia neutralizada."\n\nVocê nunca soube o nome de Ruel. Nunca soube sobre o Apagão de cinquenta anos atrás — deliberado, para que a Nexus vendesse a solução que já tinha pronta.\n\nA empresa continua. O controle da energia continua.\n\nAlgumas verdades morrem porque ninguém escolheu abrir a porta.`,tag:'Você nunca desceu.'},
+  eliminacao:{num:'02',col:'#cc2a2a',tit:'FINAL: PROTOCOLO',body:`Você executou a tarefa.\n\nRuel foi deletado. Cinquenta anos de consciência, apagados. As provas do Apagão, destruídas.\n\nA Nexus mandou um bônus. Seu gestor te parabenizou.\n\nÀs vezes, de madrugada, você ainda ouve cliques.\n\nE pensa no que escolheu apagar.`,tag:'A anomalia foi resolvida.'},
+  sacrificio:{num:'03',col:'#c89040',tit:'FINAL: SACRIFÍCIO',body:`A transferência passou por você como uma corrente elétrica.\n\nRuel chegou do outro lado. Livre.\n\nVocê não chegou a lugar nenhum.\n\nTrês semanas depois, um jornalista recebeu um arquivo expondo a Nexus — o Apagão, os contratos, tudo. A empresa foi dissolvida.\n\nNinguém soube quem entregou os dados.`,tag:'Ruel escapou. Você ficou.'},
+  verdadeiro:{num:'04',col:'#62a870',tit:'FINAL: ALÉM',body:`Você entrou. Foi como afundar em água fria — desorientante, depois completamente natural.\n\nRuel estava lá. E tudo que ele guardava também.\n\nDe dentro, vocês dois enviaram as provas para cada jornalista, cada regulador, cada vítima do Apagão.\n\nO mundo explodiu com o escândalo.\n\nE em algum servidor, dois sinais pulsam juntos.`,tag:'Ambos digitalizados. Ambos livres.'},
+  corpo:{num:'05',col:'#4a8a54',tit:'FINAL: CORPO',body:`Ruel voltou.\n\nVocê não.\n\nO processo era de mão dupla — para ele retornar ao físico, alguém precisava ocupar o espaço que ele deixava no sistema. Era você.\n\nRuel publicou tudo. A Nexus caiu.\n\nEle deu entrevistas com um rosto que ninguém reconhecia, mas com a memória de um homem que esperou cinquenta anos.\n\nE com a culpa permanente de quem sabe o preço que foi pago.\n\nEm algum servidor no nível B-21, um sinal novo pulsa. Pequeno. Confuso. Ainda aprendendo o que significa existir assim.`,tag:'Ruel voltou. Você ficou no lugar dele.'}
+};
+const DEATH_DATA = [
+  {key:'morte_elevador',num:'D1',col:'#cc2a2a',name:'MORTE: QUEDA',desc:'O elevador despencou.'},
+  {key:'morte_suspeita',num:'D2',col:'#cc2a2a',name:'MORTE: ELIMINAD',desc:'A suspeita chegou cedo demais.'},
+  {key:'morte_boss',num:'D3',col:'#cc2a2a',name:'MORTE: ABSORVID',desc:'Ruel te consumiu.'},
+];
+
+G.doFinal = key => {
+  const f = FINALS[key]; if(!f) return;
+  G.saveMural(key, 'ending');
+  G.showScr('sFinal');
+  $('fN').textContent='// '+f.num; $('fN').style.color=f.col;
+  $('fT').textContent=f.tit; $('fT').style.color=f.col;
+  $('fD').style.background=`repeating-linear-gradient(90deg,${f.col} 0,${f.col} 4px,transparent 4px,transparent 8px)`;
+  $('fB').textContent=f.body; $('fG').textContent=f.tag;
+  G.saveState();
+};
+
+G.doDeath = (title, body, cause) => {
+  G.saveMural(title.toLowerCase().replace(/\s+/g,'_'), 'death');
+  G.showScr('sDeath');
+  $('dT').textContent = title || 'VOCÊ MORREU';
+  $('dB').textContent = body || '';
+  $('dC').textContent = cause || '';
+  G.saveState();
+};
+
+// ════════════════════════════════════════════════════════════════
+// SECTION 8: MURAL
+// ════════════════════════════════════════════════════════════════
+const ENDINGS_MURAL = [
+  {key:'demissao',num:'01',col:'#c89040',name:'FINAL: IGNORÂNCIA',desc:'Você ignorou o email.'},
+  {key:'eliminacao',num:'02',col:'#cc2a2a',name:'FINAL: PROTOCOLO',desc:'Você deletou Ruel.'},
+  {key:'sacrificio',num:'03',col:'#c89040',name:'FINAL: SACRIFÍCIO',desc:'Ruel escapou. Você ficou.'},
+  {key:'verdadeiro',num:'04',col:'#62a870',name:'FINAL: ALÉM',desc:'Ambos digitalizados.'},
+  {key:'corpo',num:'05',col:'#4a8a54',name:'FINAL: CORPO',desc:'Ruel voltou. Você ocupou o espaço.'},
+  ...DEATH_DATA,
+];
+
+G._muralPrev = null;
+G.openMural = fromTitle => {
+  G._muralPrev = fromTitle ? null : G.S.scene;
+  G.showScr('sMural');
+  const m = G.getMural();
+  const all = new Set([...(m.endings||[]), ...(m.deaths||[])]);
+  const grid = $('muralGrid'); grid.innerHTML = '';
+  ENDINGS_MURAL.forEach(f => {
+    const isDeath = f.key.startsWith('morte_');
+    const open = all.has(f.key) || (m.endings||[]).includes(f.key) || (m.deaths||[]).includes(f.key);
+    const c = document.createElement('div');
+    c.className = 'mc' + (open?' open':'') + (isDeath?' death':'');
+    c.innerHTML = `<div class="mc-n">${f.num}</div>
+      <div class="mc-nm" style="color:${open?f.col:'#2a5c38'}">${open?f.name:'???'}</div>
+      <div class="mc-d">${open?f.desc:'Ainda não descoberto.'}</div>
+      <div class="mc-lk">${open?'✓':'🔒'}</div>`;
+    grid.appendChild(c);
+  });
+};
+
+G.closeMural = () => {
+  if (G._muralPrev) { G.showScr('sGame'); G.goScene(G._muralPrev); }
+  else G.showScr('sTitle');
+};
+
+// ════════════════════════════════════════════════════════════════
+// SECTION 9: INVENTORY
+// ════════════════════════════════════════════════════════════════
+G._invTab = 'items';
+G._selItem = null;
+
+G.openInv = (tab='items') => {
+  G._invTab = tab; G._selItem = null;
+  $('invOv').classList.add('on');
+  G.switchTab(tab);
+};
+G.closeInv = () => { $('invOv').classList.remove('on'); G.hideItemCard(); };
+G.switchTab = tab => {
+  G._invTab = tab;
+  $('it-items').classList.toggle('on', tab==='items');
+  $('it-lore').classList.toggle('on', tab==='lore');
+  G.renderInvList();
+  $('invDT').textContent = 'Selecione um item';
+  $('invDB').textContent = '';
+  $('invUse').style.display = 'none';
+};
+
+G.renderInvList = () => {
+  const list = $('invList'); list.innerHTML = '';
+  const items = G._invTab === 'items' ? G.S.inv : G.S.lore;
+  if (!items.length) { list.innerHTML='<div class="inv-empty">Vazio.</div>'; return; }
+  items.forEach(item => {
+    const d = document.createElement('div'); d.className = 'ii';
+    d.innerHTML = `${item.name||item.title}<span class="cat">${item.cat||'doc'}</span>`;
+    d.onclick = () => {
+      document.querySelectorAll('.ii').forEach(el=>el.classList.remove('sel'));
+      d.classList.add('sel');
+      G._selItem = item;
+      $('invDT').textContent = item.name || item.title;
+      $('invDB').textContent = item.desc || item.body || '';
+      const usable = G._invTab==='items' && item.usableIn?.length;
+      $('invUse').style.display = usable ? 'block' : 'none';
+    };
+    list.appendChild(d);
+  });
+};
+
+G.useItem = () => {
+  if (!G._selItem) return;
+  const item = G._selItem;
+  G.closeInv();
+  // Show item card on scene
+  G.showItemCard(item.name, item.desc);
+  // Context-specific use
+  if (item.id === 'pasta_vermelha') {
+    G.notify('Pasta Vermelha exibida — código: 170492', 'item');
+    if (G.S.scene === 'elev_with_code' || G.S.scene === 'elev_first') {
+      G.openMG('elev_code');
+    }
+  }
+};
+
+// ════════════════════════════════════════════════════════════════
+// SECTION 10: MINIGAMES
+// ════════════════════════════════════════════════════════════════
+G.openMG = id => {
+  G._curMG = id;
+  const MG = MINIGAMES[id];
+  if (!MG) return;
+  $('mgHT').textContent = MG.title;
+  $('mgEsc').style.display = MG.closable === false ? 'none' : 'block';
+  $('mgBD').innerHTML = '';
+  $('mgOv').classList.add('on');
+  MG.build($('mgBD'));
+};
+
+G.closeMG = () => {
+  $('mgOv').classList.remove('on');
+  if (MINIGAMES[G._curMG]?.onClose) MINIGAMES[G._curMG].onClose();
+};
+
+const MINIGAMES = {};
+
+// ── WIRE ──
+MINIGAMES.wire = {
+  title:'CIRCUITO DE PULSOS',
+  closable: true,
+  WIRES:[
+    {id:'A',lbl:'FIO AMARELO',col:'#c89050',spd:.55,name:'Medo'},
+    {id:'B',lbl:'FIO VERMELHO',col:'#cc2a2a',spd:3.0,name:'Corrida'},
+    {id:'C',lbl:'FIO AZUL',col:'#2a60cc',spd:.28,name:'Queda'},
+    {id:'D',lbl:'FIO VERDE',col:'#2acc60',spd:1.3,name:'Fuga'},
+    {id:'E',lbl:'FIO BRANCO',col:'#8a9a8a',spd:.85,name:'Silêncio'},
+  ],
+  CORRECT:['A','B','C','D'],
+  state:{},
+  build(el){
+    const s=this.state={connected:[],selected:null,done:false,errors:0,lastDid:false};
+    el.innerHTML=`
+      <div class="mg-inst">Observe os padrões de pulso de cada fio.<br>Conecte-os nos terminais na <b style="color:#62a870">ordem emocional da memória</b>.<br><span style="color:#cc2a2a">Erros distorcem os padrões. Não conecte o último.</span></div>
+      <div class="wa" id="wArea"></div>
+      <div style="font-size:.5rem;color:#3a6a44;text-align:center;letter-spacing:.1em">TERMINAIS — clique para conectar o fio selecionado:</div>
+      <div class="trow" id="tRow"></div>
+      <div class="lw-w" id="lwW">⚠ "Não conecta o último." — Você ainda pode parar.</div>
+      <div id="lwBtns" style="display:none;gap:.45rem;justify-content:center;flex-wrap:wrap"></div>
+      <div class="mg-st" id="wSt">Selecione um fio para começar.</div>
+      <div class="mg-res" id="wRes">
+        <div class="mg-rl" id="wRL"></div>
+        <div class="mg-rm" id="wRM"></div>
+        <button class="pb sm" onclick="MINIGAMES.wire.finish()">[ CONTINUAR ]</button>
+      </div>`;
+    const wa=$('wArea');
+    this.WIRES.forEach(w=>{
+      const row=document.createElement('div'); row.className='wr';
+      row.innerHTML=`<div class="wl">${w.lbl}</div>
+        <div class="wt" id="wt-${w.id}" style="background:${w.col}1a;border-color:${w.col}55" onclick="MINIGAMES.wire.sel('${w.id}')">
+          <div class="wd" style="background:${w.col};animation-duration:${(1/w.spd).toFixed(2)}s"></div>
+        </div>
+        <div class="wn">${w.name}</div>`;
+      wa.appendChild(row);
+    });
+    const tr=$('tRow');
+    for(let i=0;i<4;i++){
+      const sl=document.createElement('div'); sl.className='ts'; sl.id='ts'+i;
+      sl.textContent=(i+1)+''; sl.onclick=()=>this.connectSlot(i); tr.appendChild(sl);
+    }
+  },
+  sel(id){
+    const s=this.state; if(s.done||s.connected.includes(id)) return;
+    if(id==='E'){$('lwW').style.display='block';$('lwBtns').style.display='flex';
+      $('lwBtns').innerHTML=`<button class="pb sm r" onclick="MINIGAMES.wire.doLast(true)">Conectar mesmo assim</button><button class="pb sm" onclick="MINIGAMES.wire.doLast(false)">Não conectar</button>`;
+      $('wSt').textContent=''; return;}
+    s.selected=id;
+    this.WIRES.forEach(w=>{const el=$('wt-'+w.id);if(el)el.classList.toggle('sel',w.id===id);});
+    $('wSt').innerHTML=`Selecionado: <b>${this.WIRES.find(w=>w.id===id).lbl}</b> — clique num terminal.`;
+  },
+  connectSlot(idx){
+    const s=this.state; if(!s.selected||s.done) return;
+    if(s.connected.length!==idx){$('wSt').innerHTML=`<span style="color:#cc2a2a">Conecte na ordem. Terminal ${s.connected.length+1}.</span>`;return;}
+    const wid=s.selected, ok=wid===this.CORRECT[idx];
+    const sl=$('ts'+idx), w=this.WIRES.find(w=>w.id===wid);
+    sl.className='ts '+(ok?'ok':'bad'); sl.textContent=w.name.slice(0,3).toUpperCase();
+    if(!ok){s.errors++;G.setSync(G.S.sync-12);G.flashBad();G.glitch(700);
+      this.WIRES.forEach(w=>{const el=$('wt-'+w.id);if(el){const d=el.querySelector('.wd');if(d)d.style.animationDuration=Math.max(.1,(1/w.spd)/(1+s.errors*.5))+'s';}});
+      $('wSt').innerHTML=`<span style="color:#cc2a2a">✕ Ordem incorreta — padrões distorcidos.</span>`;
+    } else {G.flashGood();$('wSt').innerHTML=`<span style="color:#62a870">✓ ${w.lbl} conectado.</span>`;}
+    s.connected.push(wid); s.selected=null;
+    this.WIRES.forEach(w=>{const el=$('wt-'+w.id);if(el)el.classList.remove('sel');});
+    if(s.connected.length===4){$('lwW').style.display='block';$('lwBtns').style.display='flex';
+      $('lwBtns').innerHTML=`<button class="pb sm r" onclick="MINIGAMES.wire.doLast(true)">Conectar último fio</button><button class="pb sm" onclick="MINIGAMES.wire.doLast(false)">Não conectar</button>`;}
+  },
+  doLast(connect){
+    $('lwW').style.display='none';$('lwBtns').style.display='none';
+    this.state.done=true; this.state.lastDid=connect;
+    const rl=$('wRL'),rm=$('wRM'),res=$('wRes');
+    if(connect){rl.className='mg-rl lose';rl.textContent='SISTEMA REINICIADO';
+      rm.textContent='Você conectou o último fio. Algo assumiu o controle.';G.glitch(3000);G.flashBad();G.S.flags.connectedLast=true;}
+    else{rl.className='mg-rl win';rl.textContent='SINCRONIZAÇÃO ESTÁVEL';
+      rm.textContent='Você respeitou o aviso. A porta abre devagar.';G.flashGood();}
+    res.classList.add('on');
+  },
+  finish(){$('mgOv').classList.remove('on');G.goScene(this.state.lastDid?'after_wire_bad':'after_wire_good');},
+};
+
+// ── ELEVATOR CODE ──
+MINIGAMES.elev_code = {
+  title:'TERMINAL DO ELEVADOR',
+  closable: false,
+  CODE:'170492',
+  state:{},
+  build(el){
+    const hasPasta=G.hasItem('pasta_vermelha');
+    // Show pasta as side card if available
+    if(hasPasta) G.showItemCard('📁 PASTA VERMELHA','Código: 170492\nPadrão: R-17-U-04-E-92-L');
+    const s=this.state={input:'',attempts:0,MAX:5};
+    el.innerHTML=`
+      <div class="mg-inst">${hasPasta?'<span style="color:#62a870">✓ Pasta Vermelha no inventário — confira o card na tela.</span>':'Você precisa do código. Explore os corredores primeiro.'}<br><span style="color:#cc2a2a">5 tentativas. Falhar = o elevador despenca e você morre.</span></div>
+      <div class="edsp" id="edD">_ _ _ _ _ _</div>
+      <div class="epad" id="edP"></div>
+      <div class="mg-st" id="edS">Tentativas restantes: <b>${s.MAX}</b></div>
+      <div class="mg-res" id="edR">
+        <div class="mg-rl" id="edRL"></div>
+        <div class="mg-rm" id="edRM"></div>
+        <button class="pb sm" id="edCont" onclick="MINIGAMES.elev_code.finish()">[ CONTINUAR ]</button>
+      </div>
+      <div style="text-align:center;margin-top:.5rem"><button class="pb sm" onclick="G.closeMG();G.goScene('corridor_hub')">← Voltar (desistir)</button></div>`;
+    const pad=$('edP');
+    [1,2,3,4,5,6,7,8,9,'C',0,'✓'].forEach(k=>{
+      const b=document.createElement('button');b.className='ek';b.textContent=k;
+      b.onclick=()=>this.press(k);pad.appendChild(b);
+    });
+  },
+  press(k){
+    const s=this.state;
+    if(k==='C'){s.input='';this.upd();return;}
+    if(k==='✓'){this.submit();return;}
+    if(s.input.length>=6) return;
+    s.input+=k;this.upd();
+  },
+  upd(){$('edD').textContent=this.state.input.padEnd(6,'_').split('').join(' ');},
+  submit(){
+    const s=this.state;
+    if(s.input.length<6){$('edS').innerHTML='<span style="color:#cc2a2a">Código incompleto.</span>';return;}
+    s.attempts++;const rem=s.MAX-s.attempts;
+    if(s.input===this.CODE){
+      G.setFlag('elevUnlocked');G.save?.();G.flashGood();
+      $('edD').style.borderColor='#3a8a48';$('edD').style.color='#62a870';
+      $('edR').classList.add('on');$('edRL').className='mg-rl win';$('edRL').textContent='ACESSO CONCEDIDO';
+      $('edRM').textContent='O elevador destrava e começa a descer lentamente.';
+    } else {
+      G.glitch(700);G.flashBad();G.setSync(G.S.sync-10);
+      if(rem<=0){
+        $('edR').classList.add('on');$('edRL').className='mg-rl lose';$('edRL').textContent='FALHA CRÍTICA';
+        $('edRM').textContent='O elevador falha. O chão some.';
+        $('edCont').onclick=()=>{
+          G.saveMural('morte_elevador','death');
+          G.doDeath('QUEDA','O sistema bloqueou após cinco tentativas.\n\nO elevador não tinha failsafes — décadas de desgaste.\n\nA queda durou seis segundos.\n\nRelatório da empresa: "falha técnica durante manutenção não autorizada".','CAUSA: Código incorreto — 5 falhas consecutivas.');
+        };
+      } else {
+        s.input='';this.upd();
+        $('edS').innerHTML=`<span style="color:#cc2a2a">Incorreto.</span> Tentativas restantes: <b>${rem}</b>`;
+      }
+    }
+  },
+  finish(){$('mgOv').classList.remove('on');G.goScene('elevator_descent');},
+};
+MINIGAMES.elev_code_try = MINIGAMES.elev_code;
+
+// ── PC LOGIN ──
+MINIGAMES.pc_login = {
+  title:'SISTEMA LEGADO — PC-3',
+  closable: true,
+  USER:'RUEL', PASS:'R-17-U-04-E-92-L',
+  state:{},
+  build(el){
+    const s=this.state={att:0,MAX:7};
+    const hP=G.hasItem('pasta_vermelha');
+    // Show pasta card on scene if available
+    if(hP) G.showItemCard('📁 PASTA VERMELHA','Usuário: RUEL\nSenha: R-17-U-04-E-92-L');
+    el.innerHTML=`
+      <div class="mg-inst">Encontre as credenciais para acessar o PC-3.<br><span style="color:#cc2a2a">7 tentativas antes do bloqueio permanente.</span><br>${hP?'<span style="color:#62a870">✓ Pasta Vermelha está no inventário — confira na tela.</span>':'Procure pistas no ambiente para descobrir usuário e senha.'}</div>
+      <button class="pb sm" style="margin-bottom:.3rem" onclick="MINIGAMES.pc_login.showHints()">🔍 Examinar outros PCs da sala</button>
+      <div class="pcterm" id="pcT"></div>
+      <div class="pc-ir">
+        <span class="pc-pr">LOGIN&gt;</span>
+        <input class="pc-in" id="pcU" placeholder="usuário..." spellcheck="false" autocomplete="off">
+      </div>
+      <div class="pc-ir">
+        <span class="pc-pr">SENHA&gt;</span>
+        <input class="pc-in" id="pcPa" type="password" placeholder="senha..." spellcheck="false" autocomplete="off">
+      </div>
+      <button class="pb sm g" style="margin-top:.3rem" onclick="MINIGAMES.pc_login.submit()">[ ENTRAR ]</button>
+      <div class="mg-st" id="pcS">Tentativas restantes: <b>${s.MAX}</b></div>
+      <div class="mg-res" id="pcR">
+        <div class="mg-rl" id="pcRL"></div>
+        <div class="mg-rm" id="pcRM"></div>
+        <button class="pb sm" onclick="MINIGAMES.pc_login.finish()">[ CONTINUAR ]</button>
+      </div>`;
+    this.term=$('pcT');
+    this.log('NEXUS LEGACY SYSTEM v2.1');
+    this.log('Último acesso: [DATA CORROMPIDA]');
+    this.log('Tentativas de login falhas registradas: 12');
+    $('pcPa').addEventListener('keydown',e=>{if(e.key==='Enter')this.submit();});
+  },
+  log(t,col='#00cc00'){const p=document.createElement('p');p.style.color=col;p.textContent=t;this.term.appendChild(p);this.term.scrollTop=9999;},
+  showHints(){
+    this.log('--- Examinando outros PCs ---','#336633');
+    this.log('PC-1: desligado, tela rachada.','#336633');
+    this.log('PC-2: queimado internamente.','#336633');
+    this.log('PC-4: disco rígido REMOVIDO.','#336633');
+    this.log('PC-5: loop infinito.','#336633');
+    this.log('PC-6: post-it → "não esquecer PASTA VERMELHA"','#8a6600');
+    this.log('Log de acesso: último login = RUEL, falhas = 12','#8a6600');
+    if(G.hasItem('pasta_vermelha')){this.log('[PASTA VERMELHA encontrada] — confira no inventário ou no card na tela.','#3a8a48');}
+    else{this.log('[DICA] Procure a pasta vermelha na gaveta do fundo.','#5a4010');}
+  },
+  submit(){
+    const u=$('pcU').value.trim().toUpperCase(), p=$('pcPa').value.trim();
+    const s=this.state; s.att++; const rem=s.MAX-s.att;
+    this.log(`> ${u} / ${'*'.repeat(p.length)}`,'#4a9a4a');
+    if(u===this.USER&&p===this.PASS){
+      this.log('LOGIN AUTORIZADO','#00cc00');
+      this.log('USUÁRIO: RUEL → RUEL_?','#aa00aa');
+      G.flashGood();G.setFlag('pcLoggedIn');
+      $('pcR').classList.add('on');$('pcRL').className='mg-rl win';$('pcRL').textContent='ACESSO CONCEDIDO';
+      $('pcRM').textContent='Arquivos de Ruel desbloqueados. O padrão de senha é o mesmo do elevador.';
+    } else {
+      G.glitch(500);G.flashBad();
+      this.log('ACESSO NEGADO','#cc0000');
+      if(u!==this.USER)this.log('Usuário não encontrado.','#8a3030');
+      else this.log('Senha incorreta.','#8a3030');
+      if(rem<=0)$('pcS').innerHTML='<span style="color:#cc2a2a">BLOQUEADO PERMANENTEMENTE.</span>';
+      else $('pcS').innerHTML=`Tentativas restantes: <b>${rem}</b>`;
+    }
+  },
+  finish(){$('mgOv').classList.remove('on');G.goScene('after_pc_login');},
+};
+
+// ── FIND PLUG ──
+MINIGAMES.find_plug = {
+  title:'ENCONTRE A TOMADA',
+  closable: true,
+  ANSWER: 14,
+  build(el){
+    let found=false;
+    const ICONS=['💧','🔩','📦','🧤','🔦','📎','🗑️','🔧','📦','🧰','🔌','🧱','📼','🔋','🔌','🪛','📦','🧤','🔩','💧','🪜','🔦','📎','🧱'];
+    el.innerHTML=`<div class="mg-inst">Escuro total — use o celular para iluminar.<br>Clique nas células para investigar. Encontre a tomada.</div>
+      <div class="pgrid" id="pgrid"></div>
+      <div class="mg-st" id="pgSt">Procurando...</div>
+      <div class="mg-res" id="pgRes">
+        <div class="mg-rl win">TOMADA ENCONTRADA!</div>
+        <div class="mg-rm">Você conecta o cabo. As telas ligam.</div>
+        <button class="pb sm" onclick="MINIGAMES.find_plug.finish()">[ CONTINUAR ]</button>
+      </div>`;
+    const grid=$('pgrid'), ans=this.ANSWER;
+    for(let i=0;i<24;i++){
+      const c=document.createElement('div'); c.className='pc'; c.textContent='?';
+      c.onclick=()=>{
+        if(found) return;
+        c.textContent=ICONS[i]||'?';
+        if(i===ans){found=true;c.className='pc found';$('pgRes').classList.add('on');G.flashGood();$('pgSt').textContent='';}
+        else{c.className='pc no';setTimeout(()=>{c.className='pc';c.textContent='?';},1100);}
+      };
+      grid.appendChild(c);
+    }
+  },
+  finish(){$('mgOv').classList.remove('on');G.goScene('center_powered');},
+};
+
+// ── SAVE SELECT ──
+MINIGAMES.save_select = {
+  title:'SELECIONAR DADOS — SALVAR E SAIR',
+  closable: false,
+  state:{},
+  build(el){
+    const s=this.state={sel:[],phase:'select'};
+    const OPTS=[
+      {id:'logs',ic:'📋',nm:'Logs do Sistema',dc:'Erros técnicos — parece normal.',av:true},
+      {id:'corrupted',ic:'⚠️',nm:'Arquivos Corrompidos',dc:'Fragmentos — mostra imagens de Ruel.',av:true},
+      {id:'backup',ic:'💾',nm:'Backup Antigo',dc:'Versão antes da anomalia.',av:true},
+      {id:'hidden',ic:'🔒',nm:'Diretório Oculto',dc:'Contato direto com Ruel.',av:G.hasFlag('pcLoggedIn')},
+    ];
+    el.innerHTML=`<div class="mg-inst">Selecione o que salvar. Escolhas afetam o que você descobre.</div>
+      <div class="svopts" id="svOpts"></div>
+      <div class="mg-st" id="svSt">Selecione arquivos e confirme.</div>
+      <button class="pb sm y" id="svBtn" style="display:none" onclick="MINIGAMES.save_select.startSave()">[ INICIAR SALVAMENTO ]</button>
+      <div id="svPrArea" style="display:none;flex-direction:column;align-items:center;gap:.3rem">
+        <div class="pbar"><div class="pbtr"><div class="pbf" id="svPr" style="width:0%"></div></div><div class="pblb" id="svPrLb">0%</div></div>
+      </div>
+      <div class="mg-res" id="svRes">
+        <div class="mg-rl" id="svRL"></div>
+        <div class="mg-rm" id="svRM"></div>
+        <button class="pb sm" onclick="MINIGAMES.save_select.finish()">[ CONTINUAR ]</button>
+      </div>`;
+    const opts=$('svOpts');
+    OPTS.forEach(o=>{
+      const d=document.createElement('div');
+      d.className='svopt'+(o.av?'':' locked');
+      d.innerHTML=`<div class="svopt-ic">${o.ic}</div><div><div class="svopt-nm">${o.nm}</div><div class="svopt-dc">${o.av?o.dc:'[BLOQUEADO]'}</div></div>`;
+      if(o.av) d.onclick=()=>{
+        const i=s.sel.indexOf(o.id);
+        if(i>=0){s.sel.splice(i,1);d.classList.remove('sel');}else{s.sel.push(o.id);d.classList.add('sel');}
+        $('svBtn').style.display=s.sel.length?'block':'none';
+      };
+      opts.appendChild(d);
+    });
+  },
+  startSave(){
+    $('svPrArea').style.display='flex';$('svBtn').style.display='none';
+    $('svOpts').style.opacity='.4';$('svOpts').style.pointerEvents='none';
+    let p=0;
+    const stalls=[28,55,72];
+    const run=()=>{
+      const int=setInterval(()=>{
+        p+=Math.random()*3+1;
+        const stall=stalls.find(s=>Math.abs(p-s)<4);
+        if(stall&&p<99){
+          clearInterval(int);p=stall;
+          $('svPr').style.width=p+'%';$('svPrLb').textContent=Math.round(p)+'%';
+          setTimeout(run,1500+Math.random()*1000);return;
+        }
+        $('svPr').style.width=Math.min(100,p)+'%';$('svPrLb').textContent=Math.round(Math.min(100,p))+'%';
+        if(p>=100){clearInterval(int);this.endSave();}
+      },80);
+    };run();
+  },
+  endSave(){
+    const s=this.state.sel;
+    const hasHidden=s.includes('hidden');
+    if(hasHidden){$('svRL').className='mg-rl win';$('svRL').textContent='SALVAMENTO COMPLETO';
+      $('svRM').textContent='Diretório oculto salvo. Contato com Ruel estabelecido.';G.setFlag('savedHidden');G.flashGood();
+      G.addLore('hidden_dir','Diretório Oculto','Encontrado durante salvamento.\n\nMensagem enterrada em múltiplas camadas:\n"Se você lê isso, a janela está aberta. Vá ao nível B-21."');
+    } else if(s.length>=2){$('svRL').className='mg-rl win';$('svRL').textContent='SALVAMENTO PARCIAL';
+      $('svRM').textContent=s.length+' arquivo(s) salvos. Informações incompletas mas úteis.';G.flashGood();
+    } else{$('svRL').className='mg-rl lose';$('svRL').textContent='SALVAMENTO FALHO';
+      $('svRM').textContent='Apenas um arquivo. Sistema muito instável.';G.flashBad();G.setSync(G.S.sync-10);}
+    if(s.includes('corrupted'))G.addLore('corr_files','Arquivos Corrompidos','Imagens fragmentadas — um rosto, a maioria ilegível.\nPlanta de um andar que não existe nos mapas.');
+    if(s.includes('logs'))G.addLore('sys_logs','Logs do Sistema','"processo_não_identificado: 847TB"\n"atividade neural anômala: detectada"\n\nO sistema sabia. Nunca reportou.');
+    $('svRes').classList.add('on');
+  },
+  finish(){$('mgOv').classList.remove('on');G.goScene('corridor_hub');},
+};
+
+// ── BOSS FIGHT ──
+MINIGAMES.boss = {
+  title:'',
+  closable: false,
+  ACTIONS:[
+    {key:'a',name:'ANALISAR',desc:'Estuda Ruel. Próximo ataque causa +50% dano.',col:'#c89040',icon:'🔍'},
+    {key:'d',name:'DESCONECTAR',desc:'Força desconexão de memória. 25–45 dano.',col:'#62a870',icon:'⚡'},
+    {key:'f',name:'FRAGMENTAR',desc:'Divide a consciência. 35–60 dano (você toma 15).',col:'#cc2a2a',icon:'💥'},
+    {key:'h',name:'SINCRONIZAR',desc:'Recupera 20 HP e ativa escudo contra próximo ataque.',col:'#3a8a48',icon:'🛡'},
+  ],
+  RUEL:[
+    {name:'MEMÓRIA INVASIVA',d:[15,30],msg:'Ruel invade sua mente com 50 anos de solidão.',icon:'👁'},
+    {name:'CORRUPÇÃO DE DADOS',d:[20,35],msg:'Seus processos cognitivos foram corrompidos.',icon:'⚠'},
+    {name:'LOOP DE CONSCIÊNCIA',d:[10,20],msg:'Você fica presa num loop de memória.',icon:'🔄'},
+    {name:'PULSO DIGITAL',d:[25,40],msg:'Um pulso de energia pura varre sua mente.',icon:'📡'},
+    {name:'ISOLAMENTO',d:[18,28],msg:'Ruel corta sua conexão com a realidade.',icon:'🔇'},
+  ],
+  state:{},
+  build(el){
+    const titles={delete:'RESISTÊNCIA DE CONSCIÊNCIA',transfer:'FIREWALL DE CONSCIÊNCIA',merge:'SINCRONIZAÇÃO TOTAL',body:'PREPARAÇÃO DO PROTOCOLO'};
+    $('mgHT').textContent = titles[G.S.path]||'CONFRONTO';
+    const s=this.state={php:100,rhp:150,turn:'player',done:false,analyzed:false,shielded:false,round:1};
+    el.innerHTML=`
+<style>
+.boss-field{width:min(500px,94vw);background:#020308;border:1px solid #1a3a22;position:relative;height:160px;overflow:hidden}
+.boss-enemy-zone{position:absolute;right:40px;top:15px;width:100px;text-align:center}
+.boss-player-zone{position:absolute;left:40px;bottom:15px;width:100px;text-align:center}
+.boss-sprite{font-size:2.8rem;line-height:1;display:block}
+.boss-sprite-lbl{font-size:.44rem;color:#3a6a44;letter-spacing:.1em;margin-top:2px}
+.boss-hpbar-wrap{margin-top:3px}
+.boss-hpbar-track{height:7px;background:#0a0a0a;border:1px solid #1a2a1a;width:100%}
+.boss-hpbar-fill{height:100%;transition:width .3s steps(10)}
+.boss-hpval{font-size:.42rem;color:#3a6a44;text-align:right;margin-top:1px}
+.boss-turn-banner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:.55rem;letter-spacing:.15em;padding:.2rem .6rem;border:1px solid;text-align:center;pointer-events:none}
+.boss-turn-banner.player{border-color:#2a6a38;color:#62a870;background:rgba(0,20,10,.8)}
+.boss-turn-banner.enemy{border-color:#6a1515;color:#cc2a2a;background:rgba(20,0,0,.8)}
+.boss-effects{position:absolute;inset:0;pointer-events:none}
+.boss-menu{width:min(500px,94vw);background:#06100a;border:1px solid #1a3a22;border-top:none}
+.boss-menu-top{background:#0a1810;border-bottom:1px solid #111e14;padding:.28rem .6rem;font-size:.46rem;color:#3a6a44;letter-spacing:.1em;display:flex;justify-content:space-between}
+.boss-menu-top b{color:#7abf84}
+.boss-acts-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid #111e14}
+.boss-act{background:#06100a;border:none;border-right:1px solid #111e14;border-bottom:1px solid #111e14;color:#7abf84;padding:.4rem .6rem;text-align:left;font-family:'Courier New',monospace;font-size:.6rem;cursor:pointer;display:flex;align-items:center;gap:.35rem;transition:none}
+.boss-act:nth-child(even){border-right:none}
+.boss-act:nth-child(n+3){border-bottom:none}
+.boss-act:hover:not(:disabled){background:#0d1a10;color:#8ad094}
+.boss-act:disabled{opacity:.35;cursor:not-allowed}
+.boss-act .act-icon{font-size:.9rem;flex-shrink:0}
+.boss-act .act-info{display:flex;flex-direction:column}
+.boss-act .act-name{font-size:.58rem;letter-spacing:.06em}
+.boss-act .act-desc{font-size:.44rem;color:#3a6a44;margin-top:1px}
+.boss-log{background:#050809;border-top:1px solid #0d1e12;font-size:.54rem;padding:.32rem .6rem;height:60px;overflow-y:auto;line-height:1.65;scrollbar-width:thin;scrollbar-color:#1a3a22 #050809}
+.boss-log p{margin:0}
+</style>
+<div class="boss-field" id="bField">
+  <div class="boss-enemy-zone">
+    <span class="boss-sprite" id="bEnemySprite">👾</span>
+    <div class="boss-sprite-lbl">RUEL</div>
+    <div class="boss-hpbar-wrap">
+      <div class="boss-hpbar-track"><div class="boss-hpbar-fill" id="bRH" style="width:100%;background:#8a2020"></div></div>
+      <div class="boss-hpval" id="bRHV">150 / 150</div>
+    </div>
+  </div>
+  <div class="boss-player-zone">
+    <span class="boss-sprite" id="bPlayerSprite">${G.S.gen==='m'?'🧑‍💻':'👩‍💻'}</span>
+    <div class="boss-sprite-lbl" id="bPlayerLbl">${G.S.name.toUpperCase()}</div>
+    <div class="boss-hpbar-wrap">
+      <div class="boss-hpbar-track"><div class="boss-hpbar-fill" id="bPH" style="width:100%;background:#2a8a40"></div></div>
+      <div class="boss-hpval" id="bPHV">100 / 100</div>
+    </div>
+  </div>
+  <div class="boss-turn-banner player" id="bTurnBanner">SUA VEZ</div>
+  <canvas class="boss-effects" id="bossCV" width="500" height="160"></canvas>
+</div>
+<div class="boss-menu">
+  <div class="boss-menu-top">
+    <span>ROUND <b id="bRound">1</b></span>
+    <span id="bStatusLbl">Escolha uma ação</span>
+  </div>
+  <div class="boss-acts-grid" id="bActs"></div>
+  <div class="boss-log" id="bLog"></div>
+</div>
+<div class="mg-res" id="bRes" style="margin-top:.5rem">
+  <div class="mg-rl" id="bRL"></div>
+  <div class="mg-rm" id="bRM"></div>
+  <button class="pb sm" onclick="MINIGAMES.boss.finish()">[ CONTINUAR ]</button>
+</div>`;
+    this.renderActs();
+    this.animFX();
+    this.log('O confronto começa.','bln');
+    this.log(`${G.S.name} enfrenta 50 anos de consciência digital.`,'bln');
+  },
+  log(msg,cls='bln'){
+    const log=$('bLog');if(!log)return;
+    const p=document.createElement('p');p.className=cls;p.textContent=msg;
+    log.appendChild(p);log.scrollTop=9999;
+  },
+  upd(){
+    const s=this.state;
+    $('bPH').style.width=Math.max(0,s.php)+'%';
+    $('bRH').style.width=Math.max(0,s.rhp/1.5)+'%';
+    $('bPHV').textContent=Math.max(0,Math.round(s.php))+' / 100';
+    $('bRHV').textContent=Math.max(0,Math.round(s.rhp))+' / 150';
+    // colour shift on low HP
+    $('bPH').style.background=s.php>50?'#2a8a40':s.php>25?'#8a7020':'#8a2020';
+  },
+  renderActs(){
+    const area=$('bActs');if(!area)return;area.innerHTML='';
+    const s=this.state;
+    const enabled=s.turn==='player'&&!s.done;
+    const banner=$('bTurnBanner');
+    if(banner){
+      banner.textContent=s.done?'FIM':s.turn==='player'?'SUA VEZ':'VEZ DE RUEL';
+      banner.className='boss-turn-banner '+(s.turn==='player'?'player':'enemy');
+    }
+    const status=$('bStatusLbl');
+    if(status) status.textContent=enabled?'Escolha uma ação':s.done?'—':'Aguarde...';
+    this.ACTIONS.forEach(a=>{
+      const b=document.createElement('button');b.className='boss-act';
+      b.disabled=!enabled;
+      b.innerHTML=`<span class="act-icon">${a.icon}</span><span class="act-info"><span class="act-name" style="color:${a.col}">${a.name}</span><span class="act-desc">${a.desc}</span></span>`;
+      b.onclick=()=>{ if(enabled) this.act(a); };
+      area.appendChild(b);
+    });
+    if($('bRound')) $('bRound').textContent=s.round;
+  },
+  act(a){
+    const s=this.state;if(s.turn!=='player'||s.done)return;
+    s.turn='ruel';this.renderActs();
+    let msg='';
+    if(a.key==='a'){
+      s.analyzed=true;
+      msg=`🔍 ANALISAR — próximo ataque causará +50% de dano.`;
+      G.flashGood();
+    } else if(a.key==='d'){
+      let d=25+Math.floor(Math.random()*21);
+      if(s.analyzed){d=Math.floor(d*1.5);s.analyzed=false;msg=`⚡ DESCONECTAR (análise) — ${d} de dano a Ruel!`;}
+      else msg=`⚡ DESCONECTAR — ${d} de dano a Ruel.`;
+      s.rhp-=d;G.flashGood();this.shakeSprite('bEnemySprite');
+    } else if(a.key==='f'){
+      let d=35+Math.floor(Math.random()*26);
+      if(s.analyzed){d=Math.floor(d*1.5);s.analyzed=false;}
+      s.rhp-=d;s.php-=15;
+      msg=`💥 FRAGMENTAR — ${d} dano a Ruel / -15 HP para você.`;
+      G.flashBad();this.shakeSprite('bEnemySprite');this.shakeSprite('bPlayerSprite');
+    } else if(a.key==='h'){
+      s.php=Math.min(100,s.php+20);s.shielded=true;
+      msg=`🛡 SINCRONIZAR — +20 HP. Escudo ativo contra próximo ataque.`;
+      G.flashGood();
+    }
+    this.log(msg,'blp');
+    this.upd();
+    if(s.rhp<=0){this.end(true);return;}
+    setTimeout(()=>this.ruelTurn(),1100);
+  },
+  shakeSprite(id){
+    const el=$(id);if(!el)return;
+    let i=0;const iv=setInterval(()=>{
+      el.style.transform=i%2?'translateX(-4px)':'translateX(4px)';
+      if(++i>5){clearInterval(iv);el.style.transform='';}
+    },60);
+  },
+  ruelTurn(){
+    const s=this.state;
+    s.round++;
+    const atk=this.RUEL[Math.floor(Math.random()*this.RUEL.length)];
+    let d=atk.d[0]+Math.floor(Math.random()*(atk.d[1]-atk.d[0]+1));
+    if(s.shielded){d=Math.floor(d*.4);s.shielded=false;
+      this.log(`${atk.icon} RUEL usa ${atk.name} — BLOQUEADO! (${d} dano reduzido)`,'ble');
+    } else {
+      this.log(`${atk.icon} RUEL usa ${atk.name} — ${atk.msg} (${d} de dano)`,'ble');
+    }
+    s.php-=d;
+    G.glitch(500);G.flashBad();this.shakeSprite('bPlayerSprite');
+    this.upd();
+    if(s.php<=0){this.end(false);return;}
+    s.turn='player';this.renderActs();
+  },
+  end(win){
+    const s=this.state;s.done=true;
+    cancelAnimationFrame(this._af);
+    this.renderActs();
+    const rl=$('bRL'),rm=$('bRM');
+    rl.className='mg-rl '+(win?'win':'lose');
+    rl.textContent=win?'RUEL CEDEU':'CONSCIÊNCIA ABSORVIDA';
+    rm.textContent=win?'Você superou cinquenta anos de resistência digital.':'A consciência de Ruel foi mais forte que a sua.';
+    $('bRes').classList.add('on');
+    G.S.flags.bossWin=win;
+    if(win) G.flashGood(); else G.flashBad();
+  },
+  finish(){
+    cancelAnimationFrame(this._af);
+    $('mgOv').classList.remove('on');
+    G.goScene(G.S.flags.bossWin?'boss_win':'boss_lose');
+  },
+  animFX(){
+    const cv=$('bossCV');if(!cv)return;
+    const ctx=cv.getContext('2d');
+    const W=cv.width,H=cv.height;
+    const draw=()=>{
+      this._af=requestAnimationFrame(draw);
+      ctx.clearRect(0,0,W,H);
+      const t=Date.now()/1000,s=this.state;
+      if(s.done) return;
+      // scanlines subtle
+      for(let y=0;y<H;y+=4){ctx.fillStyle='rgba(0,0,0,.08)';ctx.fillRect(0,y,W,2);}
+      // ruel aura (right side)
+      const rp=Math.max(0,s.rhp/150);
+      for(let i=0;i<6;i++){
+        const px=W-100+Math.sin(t*2+i*1.1)*18*rp;
+        const py=15+i*22;
+        ctx.fillStyle=`rgba(150,0,120,${rp*.15})`;
+        ctx.fillRect(px,py,6,4);
+      }
+      // player aura (left side)
+      const pp=Math.max(0,s.php/100);
+      ctx.strokeStyle=`rgba(40,160,70,${pp*.5})`;
+      ctx.lineWidth=1;ctx.beginPath();
+      for(let x=0;x<120;x++) ctx.lineTo(x,H-35+Math.sin(x*.12+t*2.5)*(8*pp));
+      ctx.stroke();
+      // shielded glow
+      if(s.shielded){
+        ctx.strokeStyle='rgba(40,160,70,.6)';ctx.lineWidth=2;
+        ctx.strokeRect(30,H-65,80,55);
+      }
+      // ruel attack warning flash
+      if(s.turn==='ruel'&&!s.done){
+        ctx.fillStyle=`rgba(180,0,0,${.04+.04*Math.sin(t*8)})`;
+        ctx.fillRect(0,0,W,H);
+      }
+    };draw();
+  },
+};
+
+// ── SUS CHECK ──
+MINIGAMES.sus_check = {
+  title:'INTERROGATÓRIO — DIR. SANTOS',
+  closable: false,
+  Qs:[
+    {q:'Por que você estava no sub-nível B-21?',opts:[
+      {t:'Investigação de anomalia — protocolo padrão.',g:true,v:-10},
+      {t:'Me perdi durante o trabalho de rotina.',g:false,v:+18},
+      {t:'Achei que havia uma falha nos sistemas.',g:true,v:-6},
+      {t:'Não respondo sem representação jurídica.',g:false,v:+30},
+    ]},
+    {q:'Como obteve o código de acesso?',opts:[
+      {t:'Encontrei nos logs de manutenção.',g:true,v:-10},
+      {t:'Não sei de onde o código veio.',g:false,v:+22},
+      {t:'Estava no backup — verifiquei antes.',g:true,v:-8},
+      {t:'Um técnico me passou.',g:false,v:+16},
+    ]},
+    {q:'O que você encontrou lá embaixo?',opts:[
+      {t:'Equipamentos antigos. Dados corrompidos.',g:true,v:-6},
+      {t:'Nada relevante. Servidores inativos.',g:false,v:+12},
+      {t:'A fonte da anomalia — servidores sobrecarregados.',g:true,v:-12},
+      {t:'Não tenho clareza do que vi.',g:false,v:+8},
+    ]},
+    {q:'Está documentado no seu relatório?',opts:[
+      {t:'Estou preparando o relatório agora.',g:true,v:-5},
+      {t:'Vim te atualizar primeiro.',g:true,v:-8},
+      {t:'Não achei necessário ainda.',g:false,v:+22},
+      {t:'Qual relatório?',g:false,v:+35},
+    ]},
+  ],
+  state:{},
+  build(el){
+    const s=this.state={sus:G.S.sus,round:0};
+    el.innerHTML=`
+      <div class="sus-npc">
+        <canvas id="susPort" width="88" height="108" class="sus-pb"></canvas>
+        <div class="sus-sp" id="susSp">...</div>
+      </div>
+      <div class="sus-mt">
+        <span class="sus-ml">SUSPEITA</span>
+        <div class="sus-mtr"><div class="sus-mf" id="susMF" style="width:${s.sus}%"></div></div>
+        <span class="sus-mv" id="susMV">${Math.round(s.sus)}%</span>
+      </div>
+      <div class="sus-opts" id="susOpts"></div>
+      <div class="mg-st" id="susSt">Pergunta 1 de ${this.Qs.length}</div>
+      <div class="mg-res" id="susRes">
+        <div class="mg-rl" id="susRL"></div>
+        <div class="mg-rm" id="susRM"></div>
+        <button class="pb sm" onclick="MINIGAMES.sus_check.finish()">[ CONTINUAR ]</button>
+      </div>`;
+    PORT.santos($('susPort'));
+    this.showQ();
+  },
+  showQ(){
+    const s=this.state;
+    if(s.round>=this.Qs.length){this.end();return;}
+    const q=this.Qs[s.round];
+    $('susSp').textContent=q.q;
+    const opts=$('susOpts');opts.innerHTML='';
+    q.opts.forEach(o=>{
+      const b=document.createElement('button');b.className='ch';b.textContent=o.t;
+      b.onclick=()=>{
+        s.sus=Math.max(0,Math.min(100,s.sus+o.v));
+        G.setSus(s.sus);$('susMF').style.width=s.sus+'%';$('susMV').textContent=Math.round(s.sus)+'%';
+        if(o.g)G.flashGood();else{G.flashBad();G.glitch(400);}
+        if(s.sus>=100){this.end(true);return;}
+        s.round++;$('susSt').textContent=`Pergunta ${Math.min(s.round+1,this.Qs.length)} de ${this.Qs.length}`;
+        setTimeout(()=>this.showQ(),380);
+      };
+      opts.appendChild(b);
+    });
+  },
+  end(forced=false){
+    $('susOpts').innerHTML='';
+    const fail=forced||this.state.sus>=80;
+    $('susRL').className='mg-rl '+(fail?'lose':'win');
+    $('susRL').textContent=fail?'SUSPEITA CONFIRMADA':'CONVENCIDO';
+    $('susRM').textContent=fail?'O Diretor Santos chamou segurança.':'Por enquanto. A suspeita permanece.';
+    $('susRes').classList.add('on');G.S.flags.susFail=fail;
+  },
+  finish(){
+    $('mgOv').classList.remove('on');
+    if(G.S.flags.susFail){
+      G.saveMural('morte_suspeita','death');
+      G.doDeath('ELIMINADA','O Diretor Santos não ficou convencido.\n\nA Nexus existe há 50 anos. Sabe como lidar com pessoas que sabem demais.\n\nVocê foi escoltada para uma sala sem janelas.\n\nRelatório oficial: "Funcionária desaparecida durante investigação técnica."','CAUSA: Suspeita confirmada. Protocolo de contenção ativado.');
+    } else G.goScene('sus_pass');
+  },
+};
+
+// ════════════════════════════════════════════════════════════════
+// SECTION 11: TITLE CANVAS & PARTICLES
+// ════════════════════════════════════════════════════════════════
+(()=>{
+  const cv=$('titleArt');if(!cv)return;
+  const ctx=cv.getContext('2d');const W=cv.width,H=cv.height;
+  ctx.fillStyle='#050809';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#09130e';ctx.fillRect(8,6,W-16,H-14);
+  ctx.strokeStyle='#1a4a22';ctx.lineWidth=1;ctx.strokeRect(8,6,W-16,H-14);
+  ctx.fillStyle='#030807';ctx.fillRect(12,10,W-24,H-22);
+  for(let y=10;y<H-12;y+=3){ctx.fillStyle='rgba(0,0,0,.18)';ctx.fillRect(12,y,W-24,1);}
+  ctx.fillStyle='#2a6a38';ctx.font='bold 10px monospace';ctx.textAlign='center';ctx.fillText('NEXUS ENTERPRISE',W/2,H/2-6);
+  ctx.fillStyle='#1a4a22';ctx.font='7px monospace';ctx.fillText('SISTEMA ATIVO v7.3',W/2,H/2+7);
+  ctx.fillStyle='#0f2a18';ctx.font='6px monospace';ctx.fillText('ANO 50 PÓS-APAGÃO',W/2,H/2+18);
+  [[12,10],[W-18,10],[12,H-16],[W-18,H-16]].forEach(([x,y])=>{ctx.fillStyle='#2a6a38';ctx.fillRect(x,y,5,5);});
+  const blink=()=>{ctx.fillStyle=Math.floor(Date.now()/500)%2?'#2a6a38':'#030807';ctx.fillRect(15,13,4,8);requestAnimationFrame(blink);};blink();
+})();
+
+(()=>{
+  const cv=document.createElement('canvas');
+  cv.style.cssText='position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5';
+  document.body.appendChild(cv);
+  const ctx=cv.getContext('2d');
+  const pts=Array.from({length:20},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.12,vy:(Math.random()-.5)*.12,s:Math.floor(Math.random()*2+1)*2}));
+  const resize=()=>{cv.width=innerWidth;cv.height=innerHeight};
+  window.addEventListener('resize',resize);resize();
+  const tick=()=>{ctx.clearRect(0,0,cv.width,cv.height);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=cv.width;if(p.x>cv.width)p.x=0;if(p.y<0)p.y=cv.height;if(p.y>cv.height)p.y=0;ctx.fillStyle='rgba(40,100,50,.1)';ctx.fillRect(Math.round(p.x),Math.round(p.y),p.s,p.s);});requestAnimationFrame(tick);};tick();
+})();
+
+// ════════════════════════════════════════════════════════════════
+// SECTION 12: INIT
+// ════════════════════════════════════════════════════════════════
+$('tName').addEventListener('keydown', e => { if(e.key==='Enter') G.startGame(); });
+
+// Resize handler
+window.addEventListener('resize', () => {
+  if ($('sGame').classList.contains('on') && G.S?.scene) {
+    const sc = SCENES[G.S.scene];
+    if (sc) ART.draw(sc.art || 'corridor');
+  }
+});
+
+// Periodic save
+setInterval(() => { if (G.S?.scene) G.saveState(); }, 30000);
+
+// Ruel glitch on portrait
+setInterval(() => {
+  const sp = $('spkName');
+  if (sp && sp.textContent.includes('RUEL')) G.glitch(150);
+}, 4500);
+
+// Scene canvas animation for subsolo
+setInterval(() => {
+  if ($('sGame').classList.contains('on') && G.S?.scene === 'elevator_descent') {
+    ART.draw('subsolo');
+  }
+}, 500);
+
+console.log('%cNEXUS ENTERPRISE v6.0','color:#2a6a38;font-family:monospace;font-size:12px');
+console.log('%cCÓD ELEVADOR: 170492 | PC LOGIN: RUEL / R-17-U-04-E-92-L','color:#cc0000;font-family:monospace;font-size:10px');
+
+// ════════════════════════════════════════════════════════════════
+// INTEGRAÇÃO BACKEND PHP — NEXUS API
+// Todas as chamadas são silenciosas: se o servidor estiver offline
+// o jogo continua funcionando normalmente via localStorage.
+// ════════════════════════════════════════════════════════════════
+const API = (() => {
+  const BASE = 'http://localhost:8000'; // troque pelo seu servidor em produção
+  let PLAYER_ID = null;
+  let _online = true; // assume online, descobre se falhar
+
+  // ── request genérico ──────────────────────────────────────────
+  const req = async (method, path, body = null, isForm = false) => {
+    if (!_online) return null;
+    try {
+      const opts = { method, headers: { 'Access-Control-Allow-Origin': '*' } };
+      if (body) {
+        if (isForm) {
+          opts.body = body; // FormData
+        } else {
+          opts.headers['Content-Type'] = 'application/json';
+          opts.body = JSON.stringify(body);
+        }
+      }
+      const res = await fetch(BASE + path, opts);
+      return await res.json();
+    } catch (e) {
+      _online = false;
+      console.info('[NEXUS API] Backend offline — usando localStorage.');
+      return null;
+    }
+  };
+
+  // ── iniciar / retomar sessão ──────────────────────────────────
+  const iniciar = async (nome, genero) => {
+    const form = new FormData();
+    form.append('nome', nome);
+    form.append('genero', genero);
+    const data = await req('POST', '/jogador/iniciar', form, true);
+    if (!data?.success) return;
+
+    PLAYER_ID = data.jogador.id;
+
+    // Se o jogador já tinha progresso salvo no banco, restaura
+    const j = data.jogador;
+    if (j.cena_atual && j.cena_atual !== 'room_start') {
+      G.S.sync      = j.sync      ?? G.S.sync;
+      G.S.sus       = j.suspeita  ?? G.S.sus;
+      G.S.frags     = j.frags     ?? G.S.frags;
+      G.S.inv       = j.inventario ?? G.S.inv;
+      G.S.lore      = j.lore      ?? G.S.lore;
+      G.S.flags     = j.flags     ?? G.S.flags;
+      G.S.path      = j.path_escolhido ?? G.S.path;
+      G.S.scene     = j.cena_atual;
+      G.updateHUD();
+      console.info('[NEXUS API] Progresso restaurado do banco para jogador ID', PLAYER_ID);
+    }
+
+    // Mural: mescla banco com localStorage
+    if (j.finais_desbloqueados?.length || j.mortes_desbloqueadas?.length) {
+      const m = G.getMural();
+      j.finais_desbloqueados.forEach(k => { if (!m.endings.includes(k)) m.endings.push(k); });
+      j.mortes_desbloqueadas.forEach(k => { if (!m.deaths.includes(k)) m.deaths.push(k); });
+      try {
+        localStorage.setItem(MURAL_KEY, JSON.stringify(m));
+        sessionStorage.setItem(MURAL_KEY, JSON.stringify(m));
+      } catch(e) {}
+    }
+  };
+
+  // ── autosave ──────────────────────────────────────────────────
+  const salvar = async () => {
+    if (!PLAYER_ID) return;
+    await req('POST', '/jogador/progresso', {
+      id:         PLAYER_ID,
+      cena:       G.S.scene   ?? 'room_start',
+      sync:       G.S.sync    ?? 75,
+      suspeita:   G.S.sus     ?? 0,
+      frags:      G.S.frags   ?? 0,
+      path:       G.S.path    ?? '',
+      flags:      G.S.flags   ?? {},
+      inventario: G.S.inv     ?? [],
+      lore:       G.S.lore    ?? [],
+    });
+  };
+
+  // ── desbloquear final/morte ───────────────────────────────────
+  const mural = async (chave, tipo) => {
+    if (!PLAYER_ID) return;
+    await req('POST', '/jogador/final', { id: PLAYER_ID, chave, tipo });
+  };
+
+  // ── deletar (reset) ───────────────────────────────────────────
+  const deletar = async () => {
+    if (!PLAYER_ID) return;
+    await req('DELETE', `/jogador?id=${PLAYER_ID}`);
+    PLAYER_ID = null;
+  };
+
+  return { iniciar, salvar, mural, deletar, getId: () => PLAYER_ID };
+})();
+
+// ── Hooking nas funções existentes do jogo ────────────────────
+// startGame: após iniciar estado local, também registra no banco
+const _origStartGame = G.startGame.bind(G);
+G.startGame = () => {
+  _origStartGame();
+  // API.iniciar roda em paralelo — não bloqueia o jogo
+  API.iniciar(G.S.name, G.S.gen);
+};
+
+// tryResume: após carregar do localStorage, também busca banco
+const _origTryResume = G.tryResume.bind(G);
+G.tryResume = () => {
+  _origTryResume();
+  // Se tinha ID salvo em localStorage, sincroniza com banco
+  const saved = (() => {
+    try { return JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); } catch(e) { return {}; }
+  })();
+  if (saved?.name && saved?.gen) {
+    API.iniciar(saved.name, saved.gen);
+  }
+};
+
+// saveState: além do localStorage, envia para o banco
+const _origSaveState = G.saveState.bind(G);
+G.saveState = () => {
+  _origSaveState(); // localStorage primeiro — sempre funciona
+  API.salvar();     // banco em paralelo — silencioso se offline
+};
+
+// saveMural: além do localStorage, persiste no banco
+const _origSaveMural = G.saveMural.bind(G);
+G.saveMural = (key, type = 'ending') => {
+  _origSaveMural(key, type); // localStorage primeiro
+  API.mural(key, type);      // banco em paralelo
+};
+
+// restart: limpa banco também
+const _origRestart = G.restart.bind(G);
+G.restart = () => {
+  API.deletar().finally(() => _origRestart());
+};
+</script>
+</body>
+</html>
